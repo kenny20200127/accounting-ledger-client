@@ -1,5 +1,5 @@
 import { API_PREFIX } from './api-url';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import {
   Building2,
@@ -16,6 +16,7 @@ import {
   AdministrationAudit,
 } from './components/AdministrationViews';
 import type { Company, Session } from './types';
+import { applyBrowserBranding } from './company-theme';
 import './App.css';
 import './PlatformApp.css';
 const tokenKey = 'ledger.platform.accessToken';
@@ -112,6 +113,14 @@ export default function PlatformApp() {
       live = false;
     };
   }, [token, user, refresh]);
+  const selected = companies.find((item) => item.companyId === companyId);
+  const browserBrand = useMemo(
+    () => ({ companyName: selected?.companyName, logoData: selected?.logoData }),
+    [selected?.companyName, selected?.logoData],
+  );
+  useEffect(() => {
+    applyBrowserBranding(browserBrand, 'Platform Administration');
+  }, [browserBrand]);
   async function login(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
@@ -139,8 +148,8 @@ export default function PlatformApp() {
     return (
       <main className="platform-login">
         <section className="platform-login-intro">
-          <ShieldCheck size={40} />
-          <span> NORTHSTAR PLATFORM</span>
+          {/* <ShieldCheck size={40} /> */}
+          <span> KAYNET PLATFORM</span>
           <h1>Company administration</h1>
           <p>
             Onboard companies, appoint their administrators, and manage access
@@ -149,8 +158,8 @@ export default function PlatformApp() {
           <a href="/">Go to company application</a>
         </section>
         <form className="platform-login-form" onSubmit={login}>
-          <small>PLATFORM ADMINISTRATORS</small>
-          <h2>Platform sign in</h2>
+          <h3>PLATFORM ADMINISTRATORS SIGN IN</h3>
+          {/* <h2>Platform sign in</h2> */}
           <p>Use your platform administrator account.</p>
           {error && (
             <div className="error-banner" role="alert">
@@ -183,7 +192,7 @@ export default function PlatformApp() {
         <div className="platform-identity">
           <ShieldCheck size={30} />
           <div>
-            <strong>Northstar Platform</strong>
+            <strong>Kaynet Platform</strong>
             <small>COMPANY ADMINISTRATION</small>
           </div>
         </div>

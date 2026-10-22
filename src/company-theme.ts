@@ -2,6 +2,11 @@ import type { CSSProperties } from 'react';
 import type { Company } from './types';
 export const brandingUpdateKey = 'ledger.company.brandingUpdated';
 export const brandingUpdateEvent = 'ledger:company-branding-updated';
+const productName =
+  (import.meta.env.VITE_APP_NAME as string | undefined)?.trim() || 'Northstar';
+const defaultIconHref =
+  (import.meta.env.VITE_APP_ICON as string | undefined)?.trim() ||
+  '/favicon.png';
 function color(value: string | undefined, fallback: string) {
   return value && /^#[\da-f]{6}$/i.test(value) ? value : fallback;
 }
@@ -78,6 +83,32 @@ export function companyTheme(company: Company | undefined): CSSProperties {
     '--lime': secondary,
     '--canvas': blend(secondary, '#ffffff', 0.9),
   } as CSSProperties;
+}
+type BrowserBrand = Partial<Pick<Company, 'companyName' | 'logoData'>>;
+export function browserTitle(company?: BrowserBrand, fallback?: string) {
+  return company?.companyName
+    ? `${company.companyName} | ${productName}`
+    : `${fallback ?? 'Company Workspace'} | ${productName}`;
+}
+let appliedIconHref: string | null = null;
+/** Puts the company name in the browser tab and the company logo as the tab icon. */
+export function applyBrowserBranding(company?: BrowserBrand, fallback?: string) {
+  const title = browserTitle(company, fallback);
+  if (document.title !== title) document.title = title;
+  const href = company?.logoData?.trim() || defaultIconHref;
+  if (href === appliedIconHref) return;
+  appliedIconHref = href;
+  const mime = href.startsWith('data:')
+    ? /^data:([^;,]+)/.exec(href)?.[1]
+    : undefined;
+  document
+    .querySelectorAll('link[rel~="icon"]')
+    .forEach((icon) => icon.parentNode?.removeChild(icon));
+  const link = document.createElement('link');
+  link.rel = 'icon';
+  if (mime) link.type = mime;
+  link.href = href;
+  document.head.appendChild(link);
 }
 export function notifyCompanyBrandingChanged(companyId?: string) {
   const update = {

@@ -1,5 +1,5 @@
 import { API_PREFIX } from './api-url';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { FormEvent } from 'react';
 
@@ -52,7 +52,7 @@ import {
 } from 'lucide-react';
 
 import './App.css';
-import { companyTheme, brandingUpdateKey, brandingUpdateEvent } from './company-theme';
+import { companyTheme, applyBrowserBranding, brandingUpdateKey, brandingUpdateEvent } from './company-theme';
 
 import { FinancialReportsView } from './components/FinancialReportsView';
 import { LedgerCaptureView } from './components/LedgerCaptureView';
@@ -582,6 +582,10 @@ const pages: Record<PageKey, Page> = {
 
       { name: 'bankAccountId', label: 'Bank account', type: 'select', select: { endpoint: 'banking/accounts', valueField: 'bankAccountId', labelField: 'bankName', secondaryLabelField: 'accountName', placeholder: 'Select bank account' } },
 
+      { name: 'debitAccountId', label: 'Debit account (money received into)', type: 'select', required: true, select: { endpoint: 'accounts', valueField: 'accountId', labelField: 'accountName', secondaryLabelField: 'accountCode', placeholder: 'Select account to debit' } },
+
+      { name: 'creditAccountId', label: 'Credit account (customer debtor)', type: 'select', required: true, select: { endpoint: 'accounts', valueField: 'accountId', labelField: 'accountName', secondaryLabelField: 'accountCode', placeholder: 'Select account to credit' } },
+
       { name: 'referenceNumber', label: 'Reference number' },
 
     ],
@@ -953,6 +957,15 @@ function App() {
   const listPageNumber = listPagination.scope === listScope ? listPagination.number : 1;
 
   const company = companies.find((item) => item.companyId === companyId);
+
+  const browserBrand = useMemo(
+    () => ({ companyName: company?.companyName, logoData: company?.logoData }),
+    [company?.companyName, company?.logoData],
+  );
+
+  useEffect(() => {
+    applyBrowserBranding(browserBrand);
+  }, [browserBrand]);
 
   useEffect(() => {
     setListPagination({ scope: listScope, number: 1 });

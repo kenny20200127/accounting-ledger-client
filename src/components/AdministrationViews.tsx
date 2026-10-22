@@ -1,7 +1,7 @@
 import { API_PREFIX } from '../api-url';
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import { notifyCompanyBrandingChanged } from '../company-theme';
+import { browserTitle, notifyCompanyBrandingChanged } from '../company-theme';
 import type { Company } from '../types';
 type Props = {
   token: string;
@@ -411,8 +411,24 @@ export function CompanyAdministration({
             {form.companyName || 'Company branding preview'}
           </strong>
         </div>
+        <div className="admin-tab-preview" title="Browser tab preview">
+          {current?.logoData ? (
+            <img src={current.logoData} alt="" />
+          ) : (
+            <img src="/favicon.png" alt="" />
+          )}
+          <span>
+            {browserTitle(
+              {
+                companyName: form.companyName,
+                logoData: current?.logoData,
+              },
+              platform ? 'Platform Administration' : undefined,
+            )}
+          </span>
+        </div>
         <label>
-          Company logo (PNG, JPEG, WebP; maximum 2 MB)
+          Company logo (PNG, JPEG, WebP; maximum 2 MB) — also used as the browser tab icon
           <input
             key={editing ?? 'new'}
             type="file"
