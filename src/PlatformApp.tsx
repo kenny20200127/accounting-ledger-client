@@ -59,6 +59,9 @@ export default function PlatformApp() {
   const [checking, setChecking] = useState(!!token);
   const [error, setError] = useState('');
   const [refresh, setRefresh] = useState(0);
+  const [resetMode, setResetMode] = useState(false);
+  const [resetError, setResetError] = useState('');
+  const [resetDone, setResetDone] = useState(false);
   function logout() {
     localStorage.removeItem(tokenKey);
     setToken(null);
@@ -67,6 +70,9 @@ export default function PlatformApp() {
     setCompanyId('');
     setTab('companies');
     setError('');
+    setResetMode(false);
+    setResetDone(false);
+    setResetError('');
   }
   useEffect(() => {
     let live = true;
@@ -140,6 +146,28 @@ export default function PlatformApp() {
       setBusy(false);
     }
   }
+  async function resetPassword(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const form = new FormData(e.currentTarget);
+    const password = String(form.get('newPassword') ?? '');
+    if (password !== String(form.get('confirmPassword') ?? '')) {
+      setResetError('The new passwords do not match.');
+      return;
+    }
+    setResetError('');
+    setBusy(true);
+    try {
+      await api('auth/platform/forgot-password', undefined, {
+        identifier: form.get('identifier'),
+        newPassword: password,
+      });
+      setResetDone(true);
+    } catch (e) {
+      setResetError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
   if (checking)
     return (
       <div className="platform-loading">Opening platform administration...</div>
@@ -157,33 +185,115 @@ export default function PlatformApp() {
           </p>
           <a href="/">Go to company application</a>
         </section>
-        <form className="platform-login-form" onSubmit={login}>
-          <h3>PLATFORM ADMINISTRATORS SIGN IN</h3>
-          {/* <h2>Platform sign in</h2> */}
-          <p>Use your platform administrator account.</p>
-          {error && (
-            <div className="error-banner" role="alert">
-              {error}
-            </div>
-          )}
-          <label>
-            Username or email
-            <input name="identifier" autoComplete="username" required />
-          </label>
-          <label>
-            Password
-            <input
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              required
-            />
-          </label>
-          <button className="primary" disabled={busy}>
-            {busy ? 'Signing in...' : 'Sign in to platform'}
-          </button>
-          <a href="/">Company user? Open the company application</a>
-        </form>
+        {resetMode ? (
+          <form className="platform-login-form" onSubmit={resetPassword}>
+            <h3>PLATFORM ADMINISTRATOR PASSWORD RESET</h3>
+            <p>Enter your username and choose a new password.</p>
+            {resetError && (
+              <div className="error-banner" role="alert">
+                {resetError}
+              </div>
+            )}
+            {resetDone ? (
+              <>
+                <div className="success-banner">
+                  Your password has been reset. Sign in with the new password.
+                </div>
+                <button
+                  className="primary"
+                  type="button"
+                  onClick={() => {
+                    setResetMode(false);
+                    setResetDone(false);
+                    setResetError('');
+                  }}
+                >
+                  Back to sign in
+                </button>
+              </>
+            ) : (
+              <>
+                <label>
+                  Username or email
+                  <input name="identifier" autoComplete="username" required />
+                </label>
+                <label>
+                  New password
+                  <input
+                    name="newPassword"
+                    type="password"
+                    autoComplete="new-password"
+                    placeholder="At least 12 characters"
+                    minLength={12}
+                    required
+                  />
+                </label>
+                <label>
+                  Confirm new password
+                  <input
+                    name="confirmPassword"
+                    type="password"
+                    autoComplete="new-password"
+                    required
+                  />
+                </label>
+                <button className="primary" disabled={busy}>
+                  {busy ? 'Resetting...' : 'Reset password'}
+                </button>
+                <button
+                  className="link-button"
+                  type="button"
+                  onClick={() => {
+                    setResetMode(false);
+                    setResetError('');
+                  }}
+                >
+                  Back to sign in
+                </button>
+              </>
+            )}
+          </form>
+        ) : (
+          <form className="platform-login-form" onSubmit={login}>
+            <h3>PLATFORM ADMINISTRATORS SIGN IN</h3>
+            {/* <h2>Platform sign in</h2> */}
+            <p>Use your platform administrator account.</p>
+            {error && (
+              <div className="error-banner" role="alert">
+                {error}
+              </div>
+            )}
+            <label>
+              Username or email
+              <input name="identifier" autoComplete="username" required />
+            </label>
+            <label>
+              Password
+              <input
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+              />
+            </label>
+            <button className="primary" disabled={busy}>
+              {busy ? 'Signing in...' : 'Sign in to platform'}
+            </button>
+            <button
+              className="link-button"
+              type="button"
+              onClick={() => {
+                setResetMode(true);
+                setResetDone(false);
+                setResetError('');
+                setError('');
+              }}
+            >
+              Forgot password?
+            </button>
+            <a href="/">Company user? Open the company application</a>
+          </form>
+        )}
       </main>
     );
   return (

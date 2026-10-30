@@ -1222,6 +1222,46 @@ function App() {
 
 
 
+  async function resetPassword(
+
+    identifier: string,
+
+    newPassword: string,
+
+  ): Promise<string> {
+
+    setBusy(true);
+
+    try {
+
+      await api('auth/company/forgot-password', undefined, {
+
+        method: 'POST',
+
+        body: JSON.stringify({ identifier, newPassword }),
+
+      });
+
+      return '';
+
+    } catch (reason) {
+
+      return reason instanceof Error
+
+        ? reason.message
+
+        : 'We could not reset that password.';
+
+    } finally {
+
+      setBusy(false);
+
+    }
+
+  }
+
+
+
   function logout() {
 
     localStorage.removeItem(tokenKey);
@@ -1356,7 +1396,23 @@ function App() {
 
 
 
-  if (!session) return <Login onSubmit={login} busy={busy} error={error} />;
+  if (!session)
+
+    return (
+
+      <Login
+
+        onSubmit={login}
+
+        onReset={resetPassword}
+
+        busy={busy}
+
+        error={error}
+
+      />
+
+    );
 
 
 
@@ -1948,6 +2004,8 @@ function Login({
 
   onSubmit,
 
+  onReset,
+
   busy,
 
   error,
@@ -1956,11 +2014,49 @@ function Login({
 
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 
+  onReset: (identifier: string, newPassword: string) => Promise<string>;
+
   busy: boolean;
 
   error: string;
 
 }) {
+
+  const [mode, setMode] = useState<'signin' | 'reset'>('signin');
+
+  const [resetError, setResetError] = useState('');
+
+  const [resetDone, setResetDone] = useState(false);
+
+
+
+  async function submitReset(event: FormEvent<HTMLFormElement>) {
+
+    event.preventDefault();
+
+    const data = new FormData(event.currentTarget);
+
+    const password = String(data.get('newPassword') ?? '');
+
+    if (password !== String(data.get('confirmPassword') ?? '')) {
+
+      setResetError('The new passwords do not match.');
+
+      return;
+
+    }
+
+    setResetError('');
+
+    const message = await onReset(String(data.get('identifier') ?? ''), password);
+
+    setResetError(message);
+
+    if (!message) setResetDone(true);
+
+  }
+
+
 
   return (
 
@@ -2026,6 +2122,157 @@ function Login({
 
 
       <section className="login-side">
+
+        {mode === 'reset' && (
+
+          <form className="login-form" onSubmit={submitReset}>
+
+            <div className="login-title">
+              <div className="login-logo-wrap">
+                <img src="/public/images/Hicad.png" alt="HICAD" />
+              </div>
+
+              <h2>Reset your password</h2>
+
+              <p>Enter your username and choose a new password.</p>
+
+            </div>
+
+            {resetError && <div className="error-banner">{resetError}</div>}
+
+            {resetDone ? (
+
+              <>
+
+                <div className="success-banner">
+
+                  Your password has been reset. Sign in with the new password.
+
+                </div>
+
+                <button
+
+                  className="btn btn-primary login-submit"
+
+                  type="button"
+
+                  onClick={() => {
+
+                    setMode('signin');
+
+                    setResetDone(false);
+
+                    setResetError('');
+
+                  }}
+
+                >
+
+                  Back to sign in
+
+                </button>
+
+              </>
+
+            ) : (
+
+              <>
+
+                <label className="field">
+
+                  Username or email
+
+                  <input
+
+                    name="identifier"
+
+                    autoComplete="username"
+
+                    placeholder="e.g. admin"
+
+                    required
+
+                  />
+
+                </label>
+
+                <label className="field">
+
+                  New password
+
+                  <input
+
+                    name="newPassword"
+
+                    type="password"
+
+                    autoComplete="new-password"
+
+                    placeholder="At least 12 characters"
+
+                    minLength={12}
+
+                    required
+
+                  />
+
+                </label>
+
+                <label className="field">
+
+                  Confirm new password
+
+                  <input
+
+                    name="confirmPassword"
+
+                    type="password"
+
+                    autoComplete="new-password"
+
+                    required
+
+                  />
+
+                </label>
+
+                <button className="btn btn-primary login-submit" disabled={busy}>
+
+                  {busy ? 'Resetting…' : 'Reset password'}
+
+                  <ArrowUpRight size={16} />
+
+                </button>
+
+                <button
+
+                  className="btn btn-ghost login-back"
+
+                  type="button"
+
+                  onClick={() => {
+
+                    setMode('signin');
+
+                    setResetError('');
+
+                  }}
+
+                >
+
+                  Back to sign in
+
+                </button>
+
+              </>
+
+            )}
+
+          </form>
+
+        )}
+
+        {mode === 'signin' && (
 
         <form className="login-form" onSubmit={onSubmit}>
 
@@ -2102,6 +2349,28 @@ function Login({
 
             {/* <a href="#help" style={{ color: '#165b49' }}>Need help?</a> */}
 
+            <button
+
+              className="link-button"
+
+              type="button"
+
+              onClick={() => {
+
+                setMode('reset');
+
+                setResetDone(false);
+
+                setResetError('');
+
+              }}
+
+            >
+
+              Forgot password?
+
+            </button>
+
           </div>
 
 
@@ -2125,6 +2394,8 @@ function Login({
           </div>
 
         </form>
+
+        )}
 
       </section>
 
