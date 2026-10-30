@@ -1181,6 +1181,10 @@ function App() {
 
     const data = new FormData(event.currentTarget);
 
+    const loginUrl = `${API_PREFIX}/auth/company/login`;
+
+    console.log('Company login API URL:', loginUrl);
+
     try {
 
       const result = await api<Session>('auth/company/login', undefined, {
@@ -1209,6 +1213,8 @@ function App() {
       setActive(menuCodeToPageKey[result.menus?.[0]?.menuCode] ?? 'dashboard');
 
     } catch (reason) {
+
+      console.error('Company login connection error:', loginUrl, reason);
 
       setError(reason instanceof Error ? reason.message : 'Sign-in failed');
 
