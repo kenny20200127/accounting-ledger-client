@@ -19,10 +19,10 @@ npm install
 npm run dev          # Vite dev server
 ```
 
-By default the dev server proxies `/api` to `http://localhost:3000`, so run the API locally.
+By default the dev server proxies `/api` to `https://accounting-ledger-client-api.onrender.com`.
 Dev requests stay same-origin and no CORS configuration is needed.
 
-To proxy somewhere else (a preview deployment, for example) set `VITE_API_PROXY_TARGET`.
+To use a local API, set `VITE_API_PROXY_TARGET=http://localhost:3000`.
 
 ## Environment
 
@@ -31,7 +31,7 @@ Copy `.env.example` to `.env.local` and adjust as needed.
 | Variable | Used by | Effect |
 | --- | --- | --- |
 | `VITE_API_URL` | `vite.config.ts`, `src/api-url.ts` | API origin baked into the bundle. Production builds default to the deployed API; dev builds leave it empty so requests stay same-origin (`/api/v1/...`). |
-| `VITE_API_PROXY_TARGET` | `vite.config.ts` | Where the dev-server `/api` proxy points. Defaults to `http://localhost:3000`. |
+| `VITE_API_PROXY_TARGET` | `vite.config.ts` | Where the dev-server `/api` proxy points. Defaults to `https://accounting-ledger-client-api.onrender.com`. |
 
 Every request goes through `API_PREFIX` in `src/api-url.ts`, which resolves to
 `${VITE_API_URL}/api/v1`. Set the variable to an origin, **without** a trailing slash and **without**
