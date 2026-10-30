@@ -2129,7 +2129,7 @@ function Login({
 
             <div className="login-title">
               <div className="login-logo-wrap">
-                <img src="/public/images/Hicad.png" alt="HICAD" />
+                <img src="/images/Hicad.png" alt="HICAD" />
               </div>
 
               <h2>Reset your password</h2>
@@ -2278,7 +2278,7 @@ function Login({
 
           <div className="login-title">
             <div className="login-logo-wrap">
-              <img src="/public/images/Hicad.png" alt="HICAD" />
+              <img src="/images/Hicad.png" alt="HICAD" />
             </div>
             {/* <small className="eyebrow">YOUR WORKSPACE</small> */}
 

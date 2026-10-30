@@ -68,7 +68,7 @@
 .brand-icon {
     width: 120px;
     height: 34px;
-    background: url("/public/images/Hicad.png") center / contain no-repeat;
+    background: url("/images/Hicad.png") center / contain no-repeat;
     flex: none;
 }
 
