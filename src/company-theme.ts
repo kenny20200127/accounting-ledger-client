@@ -3,7 +3,7 @@ import type { Company } from './types';
 export const brandingUpdateKey = 'ledger.company.brandingUpdated';
 export const brandingUpdateEvent = 'ledger:company-branding-updated';
 const productName =
-  (import.meta.env.VITE_APP_NAME as string | undefined)?.trim() || 'Northstar';
+  (import.meta.env.VITE_APP_NAME as string | undefined)?.trim() || 'HICAD';
 const defaultIconHref =
   (import.meta.env.VITE_APP_ICON as string | undefined)?.trim() ||
   '/favicon.png';

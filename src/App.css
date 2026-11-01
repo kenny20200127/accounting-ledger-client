@@ -775,36 +775,8 @@
     border-radius: 9px;
     display: grid;
     place-items: center;
-}
-
-.kpi-icon-badge.blue {
-    background: #e6f0ff;
-    color: #1e64db;
-}
-
-.kpi-icon-badge.amber {
-    background: #fff5e6;
-    color: #d97706;
-}
-
-.kpi-icon-badge.coral {
-    background: #ffede8;
-    color: #e6512c;
-}
-
-.kpi-icon-badge.green {
-    background: #eaf7ec;
-    color: #16803c;
-}
-
-.kpi-icon-badge.indigo {
-    background: #ede9fe;
-    color: #5b21b6;
-}
-
-.kpi-icon-badge.teal {
-    background: #e0f5f0;
-    color: #0f766e;
+    background: var(--canvas);
+    color: var(--forest-deep);
 }
 
 .kpi-trend {
@@ -812,7 +784,7 @@
     font-weight: 600;
     padding: 3px 8px;
     border-radius: 12px;
-    background: #f1f5f2;
+    background: var(--canvas);
     color: #4b6156;
     display: flex;
     align-items: center;
@@ -820,18 +792,13 @@
 }
 
 .kpi-trend.positive {
-    background: #e8f7ea;
-    color: #15803d;
+    background: color-mix(in srgb, var(--positive) 12%, #fff);
+    color: var(--positive);
 }
 
 .kpi-trend.negative {
-    background: #fde8e8;
-    color: #b91c1c;
-}
-
-.kpi-trend.neutral {
-    background: #fef3c7;
-    color: #92400e;
+    background: color-mix(in srgb, var(--negative) 12%, #fff);
+    color: var(--negative);
 }
 
 .kpi-label {
@@ -850,11 +817,11 @@
 }
 
 .text-profit {
-    color: #15803d;
+    color: var(--positive);
 }
 
 .text-loss {
-    color: #b91c1c;
+    color: var(--negative);
 }
 
 .kpi-foot {
@@ -946,16 +913,16 @@
     display: inline-block;
 }
 
-.legend-item.blue i {
-    background: #3b82f6;
+.legend-item.brand i {
+    background: var(--forest);
 }
 
-.legend-item.coral i {
-    background: #f97316;
+.legend-item.neutral i {
+    background: var(--slate);
 }
 
 .legend-item.green i {
-    background: #10b981;
+    background: var(--positive);
 }
 
 /* Bar Comparison Chart */
@@ -1000,20 +967,20 @@
     cursor: pointer;
 }
 
-.bar-fill.blue {
-    background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+.bar-fill.brand {
+    background: linear-gradient(180deg, var(--forest) 0%, var(--forest-deep) 100%);
 }
 
-.bar-fill.coral {
-    background: linear-gradient(180deg, #fb923c 0%, #ea580c 100%);
+.bar-fill.neutral {
+    background: linear-gradient(180deg, #b6c2c8 0%, #8c9ba3 100%);
 }
 
 .bar-fill.green {
-    background: linear-gradient(180deg, #34d399 0%, #059669 100%);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--positive) 65%, #fff) 0%, var(--positive) 100%);
 }
 
 .bar-fill.red {
-    background: linear-gradient(180deg, #f87171 0%, #dc2626 100%);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--negative) 65%, #fff) 0%, var(--negative) 100%);
 }
 
 .bar-tooltip {
@@ -1085,19 +1052,19 @@
 }
 
 .track-segment.paid {
-    background: #10b981;
+    background: var(--positive);
 }
 
 .track-segment.partial {
-    background: #f59e0b;
+    background: var(--caution);
 }
 
 .track-segment.sent {
-    background: #3b82f6;
+    background: var(--sent);
 }
 
 .track-segment.draft {
-    background: #94a3b8;
+    background: var(--slate);
 }
 
 .track-segment.empty-track {
@@ -1128,19 +1095,19 @@
 }
 
 .status-dot.paid {
-    background: #10b981;
+    background: var(--positive);
 }
 
 .status-dot.partial {
-    background: #f59e0b;
+    background: var(--caution);
 }
 
 .status-dot.sent {
-    background: #3b82f6;
+    background: var(--sent);
 }
 
 .status-dot.draft {
-    background: #94a3b8;
+    background: var(--slate);
 }
 
 .status-meta {
@@ -1298,16 +1265,8 @@
     font: 600 10px 'DM Mono', monospace;
     padding: 2px 6px;
     border-radius: 4px;
-}
-
-.pill.green {
-    background: #eaf7ec;
-    color: #166534;
-}
-
-.pill.blue {
-    background: #e0f2fe;
-    color: #0369a1;
+    background: var(--canvas);
+    color: var(--forest-deep);
 }
 
 .quick-shortcuts-panel {
@@ -1353,36 +1312,8 @@
     display: grid;
     place-items: center;
     flex: none;
-}
-
-.shortcut-icon.blue {
-    background: #dbeafe;
-    color: #1d4ed8;
-}
-
-.shortcut-icon.coral {
-    background: #ffedd5;
-    color: #c2410c;
-}
-
-.shortcut-icon.teal {
-    background: #ccfbf1;
-    color: #0f766e;
-}
-
-.shortcut-icon.amber {
-    background: #fef3c7;
-    color: #b45309;
-}
-
-.shortcut-icon.indigo {
-    background: #e0e7ff;
-    color: #4338ca;
-}
-
-.shortcut-icon.green {
-    background: #dcfce7;
-    color: #15803d;
+    background: var(--canvas);
+    color: var(--forest-deep);
 }
 
 .tile-arrow {
@@ -1586,23 +1517,23 @@ tbody tr:hover td {
 }
 
 .status.paid {
-    background: #dcfce7;
-    color: #15803d;
+    background: color-mix(in srgb, var(--positive) 14%, #fff);
+    color: var(--positive);
 }
 
 .status.partial,
 .status.partially_paid {
-    background: #fef3c7;
-    color: #b45309;
+    background: color-mix(in srgb, var(--caution) 14%, #fff);
+    color: var(--caution);
 }
 
 .status.sent {
-    background: #dbeafe;
-    color: #1d4ed8;
+    background: color-mix(in srgb, var(--sent) 12%, #fff);
+    color: var(--sent);
 }
 
 .status.draft {
-    background: #f1f5f9;
+    background: var(--canvas);
     color: #475569;
 }
 
@@ -1621,17 +1552,14 @@ tbody tr:hover td {
 }
 
 .text-forest {
-    color: #134e3f;
+    color: var(--forest-deep);
 }
 
 .text-amber {
-    color: #d97706;
+    color: var(--caution);
     font-weight: 600;
 }
 
-.text-green {
-    color: #16a34a;
-}
 
 .text-muted {
     color: #8da096;
@@ -2730,11 +2658,11 @@ tbody tr:hover td {
     color: var(--company-contrast);
 }
 
-.app-frame :is(.brand-accent, .text-btn, .eyebrow, .kpi-arrow, .tab-btn.active) {
+.app-frame :is(.brand-accent, .text-btn, .eyebrow, .kpi-arrow, .tab-btn.active, .text-forest) {
     color: var(--company-accent-ink);
 }
 
-.app-frame :is(.top-db-pill, .live-pill, .kpi-card.revenue .kpi-icon-badge, .kpi-card.banking .kpi-icon-badge, .kpi-card.directory .kpi-icon-badge, .admin-notice) {
+.app-frame :is(.top-db-pill, .live-pill, .kpi-icon-badge, .pill, .admin-notice) {
     background: var(--company-soft);
     color: var(--company-soft-ink);
     border-color: var(--company-border);
@@ -2758,11 +2686,11 @@ tbody tr:hover td {
     border-bottom-color: var(--company-primary);
 }
 
-.app-frame .legend-item.blue i {
+.app-frame .legend-item.brand i {
     background: var(--company-primary);
 }
 
-.app-frame .bar-fill.blue {
+.app-frame .bar-fill.brand {
     background: linear-gradient(180deg, var(--company-primary), var(--company-primary-hover));
 }
 

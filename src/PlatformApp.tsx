@@ -4,7 +4,6 @@ import type { FormEvent } from 'react';
 import {
   Building2,
   LogOut,
-  ShieldCheck,
   Users,
   ListChecks,
   ClipboardList,
@@ -176,7 +175,13 @@ export default function PlatformApp() {
     return (
       <main className="platform-login">
         <section className="platform-login-intro">
-          {/* <ShieldCheck size={40} /> */}
+          <img
+            className="platform-logo"
+            src="/images/Hicad.png"
+            alt="HICAD"
+            width={254}
+            height={69}
+          />
           <span> KAYNET PLATFORM</span>
           <h1>Company administration</h1>
           <p>
@@ -300,7 +305,13 @@ export default function PlatformApp() {
     <div className="platform-app">
       <header className="platform-header">
         <div className="platform-identity">
-          <ShieldCheck size={30} />
+          <img
+            className="platform-logo"
+            src="/images/Hicad.png"
+            alt="HICAD"
+            width={254}
+            height={69}
+          />
           <div>
             <strong>Kaynet Platform</strong>
             <small>COMPANY ADMINISTRATION</small>

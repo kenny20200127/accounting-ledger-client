@@ -135,7 +135,7 @@ export function SlideMenu({
           <div className={`brand-icon ${company?.logoData ? 'has-company-logo' : ''}`}>{company?.logoData ? <img className="company-brand-logo" src={company.logoData} alt={company.companyName + ' logo'} /> : <span />}</div>
           {!collapsed && (
             <div className="brand-text">
-              <strong>{company?.companyName ?? 'Northstar'}</strong>
+              <strong>{company?.companyName ?? 'HICAD'}</strong>
               <small>ACCOUNTING SUITE</small>
             </div>
           )}

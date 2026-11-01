@@ -16,6 +16,11 @@
     --forest-deep: #124638;
     --lime: #d0e55e;
     --coral: #e98566;
+    --positive: #15803d;
+    --caution: #b45309;
+    --negative: #b91c1c;
+    --slate: #94a3b8;
+    --sent: #1d4ed8;
     --shadow: 0 18px 50px rgba(25, 42, 34, .08);
     letter-spacing: 0
 }

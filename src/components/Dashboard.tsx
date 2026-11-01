@@ -263,11 +263,11 @@ export function Dashboard({
           tabIndex={0}
         >
           <div className="kpi-top">
-            <span className="kpi-icon-badge blue">
+            <span className="kpi-icon-badge">
               <FileText size={18} />
             </span>
-            <span className="kpi-trend positive">
-              <TrendingUp size={13} /> {metrics.invoiceCount} invoices
+            <span className="kpi-trend">
+              {metrics.invoiceCount} invoices
             </span>
           </div>
           <div className="kpi-body">
@@ -288,10 +288,10 @@ export function Dashboard({
           tabIndex={0}
         >
           <div className="kpi-top">
-            <span className="kpi-icon-badge amber">
+            <span className="kpi-icon-badge">
               <Clock size={18} />
             </span>
-            <span className="kpi-trend neutral">
+            <span className="kpi-trend">
               {(metrics.totalInvoiced > 0
                 ? (metrics.totalReceivables / metrics.totalInvoiced) * 100
                 : 0
@@ -316,7 +316,7 @@ export function Dashboard({
           tabIndex={0}
         >
           <div className="kpi-top">
-            <span className="kpi-icon-badge coral">
+            <span className="kpi-icon-badge">
               <Wallet size={18} />
             </span>
             <span className="kpi-trend">
@@ -341,7 +341,7 @@ export function Dashboard({
           tabIndex={0}
         >
           <div className="kpi-top">
-            <span className="kpi-icon-badge green">
+            <span className="kpi-icon-badge">
               <Banknote size={18} />
             </span>
             <span className={`kpi-trend ${metrics.netMargin >= 0 ? 'positive' : 'negative'}`}>
@@ -369,10 +369,10 @@ export function Dashboard({
           tabIndex={0}
         >
           <div className="kpi-top">
-            <span className="kpi-icon-badge indigo">
+            <span className="kpi-icon-badge">
               <Landmark size={18} />
             </span>
-            <span className="kpi-trend positive">
+            <span className="kpi-trend">
               {metrics.bankAccountCount} bank account{metrics.bankAccountCount === 1 ? '' : 's'}
             </span>
           </div>
@@ -394,10 +394,10 @@ export function Dashboard({
           tabIndex={0}
         >
           <div className="kpi-top">
-            <span className="kpi-icon-badge teal">
+            <span className="kpi-icon-badge">
               <Users size={18} />
             </span>
-            <span className="kpi-trend positive">
+            <span className="kpi-trend">
               {metrics.accountCount} COA accounts
             </span>
           </div>
@@ -422,8 +422,8 @@ export function Dashboard({
               <h3>Revenue vs Operating Spend</h3>
             </div>
             <div className="legend-pills">
-              <span className="legend-item blue"><i /> Invoiced</span>
-              <span className="legend-item coral"><i /> Expenses</span>
+              <span className="legend-item brand"><i /> Invoiced</span>
+              <span className="legend-item neutral"><i /> Expenses</span>
               <span className="legend-item green"><i /> Net Profit</span>
             </div>
           </div>
@@ -434,7 +434,7 @@ export function Dashboard({
               <div className="chart-bar-col">
                 <div className="bar-wrapper">
                   <div
-                    className="bar-fill blue"
+                    className="bar-fill brand"
                     style={{
                       height: `${Math.min(
                         100,
@@ -460,7 +460,7 @@ export function Dashboard({
               <div className="chart-bar-col">
                 <div className="bar-wrapper">
                   <div
-                    className="bar-fill coral"
+                    className="bar-fill neutral"
                     style={{
                       height: `${Math.min(
                         100,
@@ -590,7 +590,7 @@ export function Dashboard({
                 <b>Paid in Full</b>
                 <small>{metrics.invoiceStatusCount.PAID || 0} invoices</small>
               </div>
-              <span className="status-badge paid">PAID</span>
+              <span className="status paid">PAID</span>
             </div>
 
             <div className="status-item">
@@ -599,7 +599,7 @@ export function Dashboard({
                 <b>Partially Paid</b>
                 <small>{metrics.invoiceStatusCount.PARTIALLY_PAID || 0} invoices</small>
               </div>
-              <span className="status-badge partial">PARTIAL</span>
+              <span className="status partial">PARTIAL</span>
             </div>
 
             <div className="status-item">
@@ -608,7 +608,7 @@ export function Dashboard({
                 <b>Awaiting Payment (Sent)</b>
                 <small>{metrics.invoiceStatusCount.SENT || 0} invoices</small>
               </div>
-              <span className="status-badge sent">SENT</span>
+              <span className="status sent">SENT</span>
             </div>
 
             <div className="status-item">
@@ -617,7 +617,7 @@ export function Dashboard({
                 <b>Draft Invoices</b>
                 <small>{metrics.invoiceStatusCount.DRAFT || 0} invoices</small>
               </div>
-              <span className="status-badge draft">DRAFT</span>
+              <span className="status draft">DRAFT</span>
             </div>
           </div>
         </div>
@@ -799,20 +799,20 @@ export function Dashboard({
                 <span className="fh-label">Fiscal Year:</span>
                 <span className="fh-value">
                   <b>{activeFiscalYear ? String(activeFiscalYear.yearName) : 'FY 2026'}</b>
-                  <span className="pill green">Active</span>
+                  <span className="pill">Active</span>
                 </span>
               </div>
               <div className="fh-row">
                 <span className="fh-label">Open Period:</span>
                 <span className="fh-value">
                   <b>{activePeriod ? String(activePeriod.periodName) : 'October 2026'}</b>
-                  <span className="pill blue">Posting Open</span>
+                  <span className="pill">Posting Open</span>
                 </span>
               </div>
               <div className="fh-row">
                 <span className="fh-label">Ledger State:</span>
                 <span className="fh-value">
-                  <CheckCircle2 size={14} className="text-green" /> Balanced Debits/Credits
+                  <CheckCircle2 size={14} className="text-forest" /> Balanced Debits/Credits
                 </span>
               </div>
             </div>
@@ -829,7 +829,7 @@ export function Dashboard({
                 className="shortcut-tile"
                 onClick={() => onNavigate('invoices')}
               >
-                <span className="shortcut-icon blue"><FileText size={16} /></span>
+                <span className="shortcut-icon"><FileText size={16} /></span>
                 <span>Invoices</span>
                 <ArrowUpRight size={13} className="tile-arrow" />
               </button>
@@ -838,7 +838,7 @@ export function Dashboard({
                 className="shortcut-tile"
                 onClick={() => onNavigate('expenses')}
               >
-                <span className="shortcut-icon coral"><Wallet size={16} /></span>
+                <span className="shortcut-icon"><Wallet size={16} /></span>
                 <span>Expenses</span>
                 <ArrowUpRight size={13} className="tile-arrow" />
               </button>
@@ -847,7 +847,7 @@ export function Dashboard({
                 className="shortcut-tile"
                 onClick={() => onNavigate('customers')}
               >
-                <span className="shortcut-icon teal"><Users size={16} /></span>
+                <span className="shortcut-icon"><Users size={16} /></span>
                 <span>Customers</span>
                 <ArrowUpRight size={13} className="tile-arrow" />
               </button>
@@ -856,7 +856,7 @@ export function Dashboard({
                 className="shortcut-tile"
                 onClick={() => onNavigate('journals')}
               >
-                <span className="shortcut-icon amber"><BookOpen size={16} /></span>
+                <span className="shortcut-icon"><BookOpen size={16} /></span>
                 <span>Journals</span>
                 <ArrowUpRight size={13} className="tile-arrow" />
               </button>
@@ -865,7 +865,7 @@ export function Dashboard({
                 className="shortcut-tile"
                 onClick={() => onNavigate('banking')}
               >
-                <span className="shortcut-icon indigo"><Landmark size={16} /></span>
+                <span className="shortcut-icon"><Landmark size={16} /></span>
                 <span>Banking</span>
                 <ArrowUpRight size={13} className="tile-arrow" />
               </button>
@@ -874,7 +874,7 @@ export function Dashboard({
                 className="shortcut-tile"
                 onClick={() => onNavigate('reports')}
               >
-                <span className="shortcut-icon green"><Banknote size={16} /></span>
+                <span className="shortcut-icon"><Banknote size={16} /></span>
                 <span>Reports</span>
                 <ArrowUpRight size={13} className="tile-arrow" />
               </button>
