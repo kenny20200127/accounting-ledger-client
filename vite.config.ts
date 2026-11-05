@@ -6,6 +6,9 @@ import { defineConfig, loadEnv } from 'vite';
 // `npm run build` is deployable; VITE_API_URL still overrides it.
 const PRODUCTION_API_URL = 'https://accounting-ledger-client-api.onrender.com';
 
+// Local API the dev server proxies /api to unless VITE_API_PROXY_TARGET overrides it.
+const DEVELOPMENT_API_URL = 'http://localhost:3000';
+
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_');
@@ -35,7 +38,9 @@ export default defineConfig(({ mode }) => {
     server: {
       proxy: {
         '/api': {
-          target: env.VITE_API_PROXY_TARGET ?? PRODUCTION_API_URL,
+          target:
+            env.VITE_API_PROXY_TARGET ??
+            (mode === 'production' ? PRODUCTION_API_URL : DEVELOPMENT_API_URL),
           changeOrigin: true,
         },
       },

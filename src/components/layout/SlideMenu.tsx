@@ -6,9 +6,9 @@ import {
   Search,
   X,
 } from 'lucide-react';
-import type { Company, MenuItem, PageKey } from '../types';
-import { menuCodeToPageKey, pageKeyToMenuCode } from '../types';
-import { resolveMenuIcon } from './iconMap';
+import type { Company, MenuItem, PageKey } from '../../types';
+import { menuCodeToPageKey, pageKeyToMenuCode } from '../../types';
+import { resolveMenuIcon } from '../navigation/iconMap';
 
 interface SlideMenuProps {
   company?: Company;
@@ -38,7 +38,7 @@ const categoryGroups: { name: string; codes: string[] }[] = [
   { name: 'SALES & RECEIVABLES', codes: ['INVOICES', 'CUSTOMERS', 'PAYMENTS'] },
   { name: 'PURCHASING & SPEND', codes: ['EXPENSES', 'SUPPLIERS'] },
   { name: 'ORGANIZATION & ASSETS', codes: ['COMPANIES', 'BRANCHES', 'FIXED_ASSETS'] },
-  { name: 'ACCOUNTING SETUP', codes: ['FISCAL_YEARS', 'ACCOUNTING_PERIODS'] },
+  { name: 'ACCOUNTING SETUP', codes: ['ACCOUNT_TYPES', 'ACCOUNT_SUBTYPES', 'BALANCE_SHEETS', 'MAIN_ACCOUNTS', 'FISCAL_YEARS', 'ACCOUNTING_PERIODS'] },
   { name: 'ADMINISTRATION & AUDIT', codes: ['USERS', 'ROLES', 'AUDIT_LOGS'] },
 ];
 

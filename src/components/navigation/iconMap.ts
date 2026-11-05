@@ -18,6 +18,8 @@ import {
   ClipboardList,
   FileChartColumnIncreasing,
   Layers,
+  ListTree,
+  Tags,
   Wallet,
 } from 'lucide-react';
 
@@ -44,6 +46,8 @@ export const iconStringMap: Record<string, IconComponent> = {
   'shield-check': ShieldCheck,
   'clipboard-list': ClipboardList,
   'chart-no-axes-combined': FileChartColumnIncreasing,
+  'list-tree': ListTree,
+  tags: Tags,
 };
 
 export const menuCodeIconMap: Record<string, IconComponent> = {
@@ -52,6 +56,10 @@ export const menuCodeIconMap: Record<string, IconComponent> = {
   BRANCHES: Building2,
   FISCAL_YEARS: Calendar,
   ACCOUNTING_PERIODS: CalendarDays,
+  ACCOUNT_TYPES: Layers,
+  ACCOUNT_SUBTYPES: Tags,
+  BALANCE_SHEETS: FileChartColumnIncreasing,
+  MAIN_ACCOUNTS: ListTree,
   CHART_OF_ACCOUNTS: BookOpen,
   JOURNAL_ENTRIES: BookText,
   CUSTOMERS: Users,

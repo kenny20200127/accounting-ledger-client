@@ -49,6 +49,10 @@ export type PageKey =
   | 'customers'
   | 'suppliers'
   | 'invoices'
+  | 'account-types'
+  | 'account-subtypes'
+  | 'balance-sheets'
+  | 'main-accounts'
   | 'accounts'
   | 'expenses'
   | 'banking'
@@ -102,11 +106,19 @@ export type Page = {
   description: string;
   endpoint?: string;
   menuCode?: string;
+  /** Whether requests and record creation are scoped to the selected company. Defaults to true. */
+  scoped?: boolean;
   columns?: string[];
   fields?: Field[];
   icon: ComponentType<{ size?: number; className?: string }>;
   /** Row field holding the record id used to fetch /:id/pdf downloads. */
   pdfDownload?: { idField: string };
+  /** Row field holding the record id used for edit and delete requests. */
+  idField?: string;
+  /** Fields shown in the edit dialog. Presence enables row editing. */
+  editFields?: string[];
+  /** Enables deleting rows through DELETE /:id. */
+  deletable?: boolean;
   /** Helper text shown at the top of the create dialog. */
   createNote?: string;
 };
@@ -117,6 +129,10 @@ export const menuCodeToPageKey: Record<string, PageKey> = {
   BRANCHES: 'branches',
   FISCAL_YEARS: 'fiscal-years',
   ACCOUNTING_PERIODS: 'accounting-periods',
+  ACCOUNT_TYPES: 'account-types',
+  ACCOUNT_SUBTYPES: 'account-subtypes',
+  BALANCE_SHEETS: 'balance-sheets',
+  MAIN_ACCOUNTS: 'main-accounts',
   CHART_OF_ACCOUNTS: 'accounts',
   JOURNAL_ENTRIES: 'journals',
   CUSTOMERS: 'customers',
@@ -140,6 +156,10 @@ export const pageKeyToMenuCode: Record<PageKey, string> = {
   branches: 'BRANCHES',
   'fiscal-years': 'FISCAL_YEARS',
   'accounting-periods': 'ACCOUNTING_PERIODS',
+  'account-types': 'ACCOUNT_TYPES',
+  'account-subtypes': 'ACCOUNT_SUBTYPES',
+  'balance-sheets': 'BALANCE_SHEETS',
+  'main-accounts': 'MAIN_ACCOUNTS',
   accounts: 'CHART_OF_ACCOUNTS',
   journals: 'JOURNAL_ENTRIES',
   customers: 'CUSTOMERS',

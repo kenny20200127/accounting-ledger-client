@@ -1378,6 +1378,22 @@
     border-color: #175442;
 }
 
+.btn-danger {
+    background: #b42318;
+    color: #ffffff;
+    border-color: #b42318;
+}
+
+.btn-danger:hover {
+    background: #96190f;
+    border-color: #96190f;
+}
+
+.btn-danger:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 .btn-primary:hover {
     background: #124334;
 }
@@ -1599,6 +1615,12 @@ tbody tr:hover td {
     background: #e9f2ec;
     border-color: #bad3c3;
     color: #134637;
+}
+
+.row-open.danger:hover {
+    background: #fdecea;
+    border-color: #f4c7c3;
+    color: #b42318;
 }
 
 .table-footer {

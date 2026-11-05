@@ -13,12 +13,13 @@ import {
   UserAdministration,
   RoleAdministration,
   AdministrationAudit,
-} from './components/AdministrationViews';
+} from './components/administration';
 import type { Company, Session } from './types';
 import { applyBrowserBranding } from './company-theme';
+import { platformTokenKey } from './config/storage';
 import './App.css';
 import './PlatformApp.css';
-const tokenKey = 'ledger.platform.accessToken';
+const tokenKey = platformTokenKey;
 type Tab = 'companies' | 'users' | 'roles' | 'audit';
 const tabs = [
   { id: 'companies' as const, label: 'Companies', icon: Building2 },

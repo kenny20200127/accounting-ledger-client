@@ -1,4 +1,4 @@
-import { API_PREFIX } from '../api-url';
+import { API_PREFIX } from '../../api-url';
 import { useEffect, useState } from 'react';
 interface Summary {
   journals: { postedCount: number; draftCount: number; postedDebit: string; postedCredit: string };

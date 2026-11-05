@@ -1,4 +1,4 @@
-import { API_PREFIX } from '../api-url';
+import { API_PREFIX } from '../../api-url';
 import { useEffect, useState } from 'react';
 import { Download, RefreshCw } from 'lucide-react';
 import { LegacyMigrationReview } from './LegacyMigrationReview';
