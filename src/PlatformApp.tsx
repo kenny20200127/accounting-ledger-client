@@ -15,6 +15,7 @@ import {
   AdministrationAudit,
 } from './components/administration';
 import type { Company, Session } from './types';
+import { PasswordInput } from './components/common/PasswordInput';
 import { applyBrowserBranding } from './company-theme';
 import { platformTokenKey } from './config/storage';
 import './App.css';
@@ -225,9 +226,8 @@ export default function PlatformApp() {
                 </label>
                 <label>
                   New password
-                  <input
+                  <PasswordInput
                     name="newPassword"
-                    type="password"
                     autoComplete="new-password"
                     placeholder="At least 12 characters"
                     minLength={12}
@@ -236,9 +236,8 @@ export default function PlatformApp() {
                 </label>
                 <label>
                   Confirm new password
-                  <input
+                  <PasswordInput
                     name="confirmPassword"
-                    type="password"
                     autoComplete="new-password"
                     required
                   />
@@ -275,9 +274,8 @@ export default function PlatformApp() {
             </label>
             <label>
               Password
-              <input
+              <PasswordInput
                 name="password"
-                type="password"
                 autoComplete="current-password"
                 required
               />

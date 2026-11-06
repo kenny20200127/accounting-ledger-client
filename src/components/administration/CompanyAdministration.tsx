@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { browserTitle } from '../../company-theme';
 import type { Company } from '../../types';
+import { PasswordInput } from '../common/PasswordInput';
 import { createPortalApi } from './api';
 import type { AdministrationProps } from './types';
 
@@ -59,7 +60,6 @@ export function CompanyAdministration({
     lastName: '',
   });
   const [logo, setLogo] = useState<File | null>(null);
-  const [seed, setSeed] = useState(true);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -138,7 +138,6 @@ export function CompanyAdministration({
             firstAdmin: Object.fromEntries(
               Object.entries(admin).filter(([, value]) => value !== ''),
             ),
-            seedStandardAccounts: seed,
           },
           'POST',
         );
@@ -429,37 +428,34 @@ export function CompanyAdministration({
                   {key === 'password'
                     ? 'Initial password (at least 12 characters)'
                     : key.replace(/([A-Z])/g, ' $1')}
-                  <input
-                    type={
-                      key === 'password'
-                        ? 'password'
-                        : key === 'email'
-                          ? 'email'
-                          : 'text'
-                    }
-                    autoComplete={key === 'password' ? 'new-password' : 'off'}
-                    required={['username', 'email', 'password'].includes(key)}
-                    minLength={key === 'password' ? 12 : undefined}
-                    value={admin[key]}
-                    onChange={(event) =>
-                      setAdmin({ ...admin, [key]: event.target.value })
-                    }
-                  />
+                  {key === 'password' ? (
+                    <PasswordInput
+                      autoComplete="new-password"
+                      required
+                      minLength={12}
+                      value={admin[key]}
+                      onChange={(event) =>
+                        setAdmin({ ...admin, [key]: event.target.value })
+                      }
+                    />
+                  ) : (
+                    <input
+                      type={key === 'email' ? 'email' : 'text'}
+                      autoComplete="off"
+                      required={['username', 'email'].includes(key)}
+                      value={admin[key]}
+                      onChange={(event) =>
+                        setAdmin({ ...admin, [key]: event.target.value })
+                      }
+                    />
+                  )}
                 </label>
               ))}
             </div>
-            <label className="admin-check">
-              <input
-                type="checkbox"
-                checked={seed}
-                onChange={(event) => setSeed(event.target.checked)}
-              />
-              Create starter chart of accounts
-            </label>
             <p>
               Creates an administrator, accountant and viewer roles, a head
-              office, and 12 accounting periods. No financial transactions are
-              copied.
+              office, and 12 accounting periods. The chart of accounts starts
+              empty.
             </p>
           </>
         )}

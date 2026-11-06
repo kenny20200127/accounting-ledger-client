@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { PasswordInput } from '../common/PasswordInput';
 import { createPortalApi } from './api';
 import type { AdministrationProps, ManagedUser, Role } from './types';
 
@@ -254,9 +255,8 @@ export function UserAdministration({
           <h2>Reset password for {reset.username}</h2>
           <label>
             New password
-            <input
+            <PasswordInput
               required
-              type="password"
               minLength={12}
               maxLength={128}
               autoComplete="new-password"
@@ -312,23 +312,29 @@ export function UserAdministration({
               .map((key) => (
                 <label key={key}>
                   {key.replace(/([A-Z])/g, ' $1')}
-                  <input
-                    required={['username', 'email', 'password'].includes(key)}
-                    type={
-                      key === 'password'
-                        ? 'password'
-                        : key === 'email'
-                          ? 'email'
-                          : 'text'
-                    }
-                    minLength={key === 'password' ? 12 : undefined}
-                    maxLength={key === 'password' ? 128 : 100}
-                    autoComplete={key === 'password' ? 'new-password' : 'off'}
-                    value={form[key]}
-                    onChange={(event) =>
-                      setForm({ ...form, [key]: event.target.value })
-                    }
-                  />
+                  {key === 'password' ? (
+                    <PasswordInput
+                      required
+                      minLength={12}
+                      maxLength={128}
+                      autoComplete="new-password"
+                      value={form[key]}
+                      onChange={(event) =>
+                        setForm({ ...form, [key]: event.target.value })
+                      }
+                    />
+                  ) : (
+                    <input
+                      required={['username', 'email'].includes(key)}
+                      type={key === 'email' ? 'email' : 'text'}
+                      maxLength={100}
+                      autoComplete="off"
+                      value={form[key]}
+                      onChange={(event) =>
+                        setForm({ ...form, [key]: event.target.value })
+                      }
+                    />
+                  )}
                 </label>
               ))}
           </div>

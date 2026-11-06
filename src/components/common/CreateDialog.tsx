@@ -5,6 +5,7 @@ import { api } from '../../api/client';
 import type { Field } from '../../types';
 import { singular } from '../../lib/format';
 import { Combobox } from './Combobox';
+import { PasswordInput } from './PasswordInput';
 
 type CreateDialogProps = {
   title: string;
@@ -403,6 +404,17 @@ export function CreateDialog({
                           {optError[field.name]}
                         </small>
                       )}
+                    </>
+                  ) : field.type === 'password' ? (
+                    <>
+                      {field.label}
+                      <PasswordInput
+                        name={field.name}
+                        required={field.required}
+                        placeholder={
+                          field.name.endsWith('Id') ? 'UUID' : undefined
+                        }
+                      />
                     </>
                   ) : (
                     <>

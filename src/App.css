@@ -2788,3 +2788,47 @@ tbody tr:hover td {
     color: var(--company-soft-ink);
     border-color: var(--company-border);
 }
+.password-input {
+    position: relative;
+    display: block;
+    width: 100%;
+}
+
+.password-input > input {
+    width: 100%;
+    padding-right: 42px;
+}
+
+.admin-view .password-input > input {
+    padding-right: 42px;
+}
+
+.platform-login-form .password-input > input {
+    padding-right: 42px;
+}
+
+.password-input .password-toggle,
+.admin-view .password-input .password-toggle,
+.platform-login-form .password-input .password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 4px;
+    transform: translateY(-50%);
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #64776e;
+    cursor: pointer;
+}
+
+.password-input .password-toggle:hover,
+.admin-view .password-input .password-toggle:hover,
+.platform-login-form .password-input .password-toggle:hover {
+    background: rgba(23, 98, 70, 0.08);
+    color: #165b49;
+}

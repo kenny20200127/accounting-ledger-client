@@ -105,7 +105,8 @@ function App() {
   const canDelete = !!menuAccess?.canDelete;
   const deleteLabel = deleteTarget
     ? String(
-        deleteTarget.description ??
+        deleteTarget.accountName ??
+          deleteTarget.description ??
           deleteTarget.mainCode ??
           deleteTarget.code ??
           '',

@@ -307,12 +307,15 @@ export const pages: Record<PageKey, Page> = {
   },
   accounts: {
     title: 'Chart of accounts',
-    description: 'Company ledger accounts and posting controls.',
+    description: 'Posting accounts under each main account.',
     endpoint: 'accounts',
     menuCode: 'CHART_OF_ACCOUNTS',
     icon: FileChartColumnIncreasing,
+    idField: 'accountId',
     createNote: 'Account codes are generated from the selected main account.',
-    columns: ['accountCode', 'accountName', 'mainAccount.description', 'accountType.code', 'isHeader', 'allowPosting', 'isActive'],
+    editFields: ['accountName', 'description'],
+    deletable: true,
+    columns: ['accountCode', 'accountName', 'mainAccount.description', 'accountType.code', 'isActive'],
     fields: [
       {
         name: 'mainAccountId',
@@ -329,8 +332,6 @@ export const pages: Record<PageKey, Page> = {
       },
       { name: 'accountName', label: 'Account name', required: true },
       { name: 'description', label: 'Description', full: true },
-      { name: 'isHeader', label: 'Header account', type: 'checkbox' },
-      { name: 'allowPosting', label: 'Allow posting', type: 'checkbox' },
     ],
   },
   expenses: {

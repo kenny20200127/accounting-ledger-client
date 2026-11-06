@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { ArrowUpRight } from 'lucide-react';
+import { PasswordInput } from '../common/PasswordInput';
 
 type LoginProps = {
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
@@ -106,9 +107,8 @@ export function Login({ onSubmit, onReset, busy, error }: LoginProps) {
                 </label>
                 <label className="field">
                   New password
-                  <input
+                  <PasswordInput
                     name="newPassword"
-                    type="password"
                     autoComplete="new-password"
                     placeholder="At least 12 characters"
                     minLength={12}
@@ -117,9 +117,8 @@ export function Login({ onSubmit, onReset, busy, error }: LoginProps) {
                 </label>
                 <label className="field">
                   Confirm new password
-                  <input
+                  <PasswordInput
                     name="confirmPassword"
-                    type="password"
                     autoComplete="new-password"
                     required
                   />
@@ -170,9 +169,8 @@ export function Login({ onSubmit, onReset, busy, error }: LoginProps) {
 
             <label className="field">
               Password
-              <input
+              <PasswordInput
                 name="password"
-                type="password"
                 autoComplete="current-password"
                 placeholder="Enter your password"
                 required
