@@ -2,7 +2,7 @@ import { API_PREFIX } from '../../api-url';
 import { useEffect, useState } from 'react';
 import { Download, RefreshCw } from 'lucide-react';
 import { LegacyMigrationReview } from './LegacyMigrationReview';
-type Kind = 'trial-balance' | 'profit-loss' | 'account-balances';
+type Kind = 'trial-balance' | 'profit-loss' | 'account-balances' | 'chart-of-accounts' | 'main-accounts';
 type Options = {
   company: { companyName: string; address: string; currency: string };
   groups: { code: string; name: string }[];
@@ -22,6 +22,8 @@ const kinds: { id: Kind; title: string; description: string }[] = [
   { id: 'trial-balance', title: 'Trial Balance', description: 'Current month and year-to-date balances' },
   { id: 'profit-loss', title: 'Profit & Loss', description: 'Income, expenses, and profit or loss' },
   { id: 'account-balances', title: 'Balance of Account', description: 'Detailed balances by account group' },
+  { id: 'chart-of-accounts', title: 'Chart of Accounts', description: 'Accounts grouped by main account' },
+  { id: 'main-accounts', title: 'Main Accounts', description: 'Main account codes and classifications' },
 ];
 const presets = [
   { id: 'banks', title: 'Bank and cash balances', codes: ['156000', '157000'] },
@@ -74,6 +76,7 @@ export function FinancialReportsView({ token, companyId }: { token: string; comp
       .catch(e => { if (!controller.signal.aborted) setError(e.message); });
     return () => controller.abort();
   }, [companyId, token]);
+  const structural = kind === 'chart-of-accounts' || kind === 'main-accounts';
   const selectedGroups = preset === 'custom' ? customGroups : presets.find(p => p.id === preset)?.codes ?? [];
   const params = new URLSearchParams({ companyId, report: kind, asOf, includeZero: String(includeZero) });
   if (branchId) params.set('branchId', branchId);
@@ -124,8 +127,8 @@ export function FinancialReportsView({ token, companyId }: { token: string; comp
     <form className="table-panel report-filter-panel" onSubmit={event => { event.preventDefault(); setRefresh(n => n + 1); }}>
       <div className="report-filter-grid">
         <label>As at date<input type="date" required value={asOf} onChange={e => { setAsOf(e.target.value); setFiscalYearId(''); }} /></label>
-        <label>Branch<select value={branchId} onChange={e => setBranchId(e.target.value)}><option value="">All branches</option>{options?.branches.map(b => <option key={b.branchId} value={b.branchId}>{b.branchName}</option>)}</select></label>
-        <label>Fiscal year<select value={fiscalYearId} onChange={e => setFiscalYearId(e.target.value)}><option value="">Detect from report date</option>{options?.fiscalYears.filter(f => f.startDate <= asOf && f.endDate >= asOf).map(f => <option key={f.fiscalYearId} value={f.fiscalYearId}>{f.yearName}</option>)}</select></label>
+        {!structural && <label>Branch<select value={branchId} onChange={e => setBranchId(e.target.value)}><option value="">All branches</option>{options?.branches.map(b => <option key={b.branchId} value={b.branchId}>{b.branchName}</option>)}</select></label>}
+        {!structural && <label>Fiscal year<select value={fiscalYearId} onChange={e => setFiscalYearId(e.target.value)}><option value="">Detect from report date</option>{options?.fiscalYears.filter(f => f.startDate <= asOf && f.endDate >= asOf).map(f => <option key={f.fiscalYearId} value={f.fiscalYearId}>{f.yearName}</option>)}</select></label>}
         {kind === 'account-balances' && <label>Account group<select value={preset} onChange={e => setPreset(e.target.value)}><option value="all">All accounts</option>{availablePresets.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}<option value="custom">Choose account groups</option></select></label>}
       </div>
       {kind === 'account-balances' && preset === 'custom' && <div className="report-group-list" aria-label="Choose account groups">{options?.groups.map(group => <label key={group.code}><input type="checkbox" checked={customGroups.includes(group.code)} disabled={customGroups.length >= 30 && !customGroups.includes(group.code)} onChange={event => setCustomGroups(current => event.target.checked ? [...current, group.code] : current.filter(code => code !== group.code))} />{group.code} - {group.name}</label>)}</div>}
@@ -139,10 +142,12 @@ export function FinancialReportsView({ token, companyId }: { token: string; comp
     {!options && !error && <p role="status">Loading report options...</p>}
     {!validFilters && <p>Choose a report date and at least one account group.</p>}
     {report && previewQuery === query && <section className="table-panel report-preview">
-      <header className="report-paper-heading">{report.logoData && <img src={report.logoData} alt="Company logo" style={{maxWidth:160,maxHeight:65,objectFit:'contain'}} />}<h2>{report.companyName}</h2><p>{report.address}</p><h3>{report.title}</h3><p>As at {report.asOf} | {report.branchName} | {report.currency}</p><small>Produced on {new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Lagos', dateStyle: 'medium', timeStyle: 'short' }).format(new Date(report.generatedAt))} | Fiscal year starts {report.fiscalYearStart}</small></header>
+      <header className="report-paper-heading">{report.logoData && <img src={report.logoData} alt="Company logo" style={{maxWidth:160,maxHeight:65,objectFit:'contain'}} />}<h2>{report.companyName}</h2><p>{report.address}</p><h3>{report.title}</h3><p>{report.kind === 'chart-of-accounts' || report.kind === 'main-accounts' ? `As at ${report.asOf}` : `As at ${report.asOf} | ${report.branchName} | ${report.currency}`}</p><small>Produced on {new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Lagos', dateStyle: 'medium', timeStyle: 'short' }).format(new Date(report.generatedAt))}{report.fiscalYearStart ? ` | Fiscal year starts ${report.fiscalYearStart}` : ''}</small></header>
       <div className="report-notes">
         {report.kind === 'trial-balance' && <p>Current month shows net movement. Year-to-date balances include brought-forward posted entries.</p>}
         {report.kind === 'profit-loss' && <p>Credit income and profit appear in parentheses. Year to date begins {report.fiscalYearStart}.</p>}
+        {report.kind === 'chart-of-accounts' && <p>Chart accounts are grouped by main account.</p>}
+        {report.kind === 'main-accounts' && <p>Main accounts define the code range and classification used by their chart accounts.</p>}
         {report.warnings.map(warning => <p key={warning} className="report-data-note">{warning}</p>)}
       </div>
       <div className="table-scroll"><table className="financial-report-table"><thead><tr>{report.columns.map(c => <th key={c.key} className={c.numeric ? 'report-number' : ''}>{c.label}</th>)}</tr></thead><tbody>

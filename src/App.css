@@ -494,6 +494,24 @@
     color: #ff9176;
 }
 
+.logout-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-left: auto;
+    color: #8ea89b;
+    font-size: 10.5px;
+    font-weight: 600;
+}
+
+.logout-action .logout-icon {
+    margin-left: 0;
+}
+
+.user-info-btn:hover .logout-action {
+    color: #ff9176;
+}
+
 .collapsed-logout-btn {
     width: 100%;
     height: 36px;
@@ -2608,7 +2626,7 @@ tbody tr:hover td {
     color: var(--company-sidebar-ink);
 }
 
-.app-frame .slide-menu :is(.brand-text strong, .brand-text small, .slide-nav-item, .slide-nav-icon, .nav-group-title, .db-sync-info b, .db-sync-info small, .db-refresh-btn, .menu-search-icon, .user-details b, .user-details small, .logout-icon, .collapsed-logout-btn, .desktop-collapse-btn, .mobile-close-btn, .menu-search-input, .clear-search-btn) {
+.app-frame .slide-menu :is(.brand-text strong, .brand-text small, .slide-nav-item, .slide-nav-icon, .nav-group-title, .db-sync-info b, .db-sync-info small, .db-refresh-btn, .menu-search-icon, .user-details b, .user-details small, .logout-icon, .logout-action, .collapsed-logout-btn, .desktop-collapse-btn, .mobile-close-btn, .menu-search-input, .clear-search-btn) {
     color: var(--company-sidebar-ink);
 }
 

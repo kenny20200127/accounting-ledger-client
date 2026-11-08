@@ -14,13 +14,16 @@ export const amountPattern = /^(?=.*[1-9])\d+(\.\d{1,2})?$/;
 
 let lineIdCounter = 1;
 
-export const blankLine = (): CaptureLine => ({
+export const blankLine = (
+  overrides: Partial<Omit<CaptureLine, 'id'>> = {},
+): CaptureLine => ({
   id: lineIdCounter++,
   accountCode: '',
   accountName: '',
   amount: '',
   transactionType: 'DB',
   remarks: '',
+  ...overrides,
 });
 
 export function today() {

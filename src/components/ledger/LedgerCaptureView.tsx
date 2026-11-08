@@ -52,6 +52,13 @@ export function LedgerCaptureView({ token, companyId }: ViewProps) {
     0,
   );
   const difference = debitCents - creditCents;
+  const linesValid =
+    lines.length >= 2 &&
+    lines.every(
+      (line) => !!line.accountCode && amountPattern.test(line.amount),
+    );
+  const canPost =
+    !posting && linesValid && debitCents === creditCents && debitCents > 0;
 
   useEffect(() => {
     if (!companyId) return;
@@ -102,6 +109,30 @@ export function LedgerCaptureView({ token, companyId }: ViewProps) {
     return () => controller.abort();
   }, [companyId, token, debouncedSearch, page, historyRefresh]);
 
+  function addLine() {
+    setLines((rows) => {
+      const debit = rows.reduce(
+        (sum, line) =>
+          sum + (line.transactionType === 'DB' ? toCents(line.amount) : 0),
+        0,
+      );
+      const credit = rows.reduce(
+        (sum, line) =>
+          sum + (line.transactionType === 'CR' ? toCents(line.amount) : 0),
+        0,
+      );
+      const outstanding = debit - credit;
+      if (outstanding === 0) return [...rows, blankLine()];
+      return [
+        ...rows,
+        blankLine({
+          transactionType: outstanding > 0 ? 'CR' : 'DB',
+          amount: (Math.abs(outstanding) / 100).toFixed(2),
+        }),
+      ];
+    });
+  }
+
   async function post(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError('');
@@ -114,6 +145,10 @@ export function LedgerCaptureView({ token, companyId }: ViewProps) {
           `Line amount "${line.amount || '—'}" must be a positive number with up to two decimals.`,
         );
     }
+    if (debitCents !== creditCents)
+      return setError(
+        `Total debits must equal total credits. Out of balance by ${formatCents(Math.abs(difference))}.`,
+      );
     setPosting(true);
     try {
       const payload = {
@@ -295,7 +330,7 @@ export function LedgerCaptureView({ token, companyId }: ViewProps) {
               <button
                 className="btn btn-light"
                 type="button"
-                onClick={() => setLines((rows) => [...rows, blankLine()])}
+                onClick={addLine}
               >
                 <Plus size={14} /> Add line
               </button>
@@ -409,7 +444,7 @@ export function LedgerCaptureView({ token, companyId }: ViewProps) {
               </span>
             )}
           </div>
-          <button className="btn btn-primary" type="submit" disabled={posting}>
+          <button className="btn btn-primary" type="submit" disabled={!canPost}>
             <CheckCircle2 size={15} /> {posting ? 'Posting…' : 'Post entry'}
           </button>
         </div>

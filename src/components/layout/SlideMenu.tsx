@@ -254,7 +254,10 @@ export function SlideMenu({
                   </b>
                   <small>Administrator</small>
                 </div>
-                <LogOut size={15} className="logout-icon" />
+                <span className="logout-action">
+                  <LogOut size={15} className="logout-icon" />
+                  Logout
+                </span>
               </button>
             </div>
           ) : (
