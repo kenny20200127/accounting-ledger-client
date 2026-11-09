@@ -13,7 +13,13 @@ import { api } from './api/client';
 import { pages } from './config/pages';
 import { storageKeys } from './config/storage';
 import { menuCodeToPageKey } from './types';
-import type { Company, MenuItem, PageKey, Session } from './types';
+import type {
+  Company,
+  FinancialReportKind,
+  MenuItem,
+  PageKey,
+  Session,
+} from './types';
 
 import { Login } from './components/auth/Login';
 import { AppContent } from './components/layout/AppContent';
@@ -57,6 +63,10 @@ function App() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [createRequest, setCreateRequest] = useState(0);
+  const [reportRequest, setReportRequest] = useState<{
+    kind: FinancialReportKind;
+    nonce: number;
+  } | null>(null);
 
   const page = pages[active];
   const company = companies.find((item) => item.companyId === companyId);
@@ -260,6 +270,7 @@ function App() {
         onNavigate={(key) => {
           setActive(key);
           setError('');
+          setReportRequest(null);
         }}
         collapsed={slideMenuCollapsed}
         onToggleCollapse={toggleCollapse}
@@ -290,9 +301,19 @@ function App() {
             menus={dbMenus}
             error={error}
             createRequest={createRequest}
+            reportRequest={reportRequest}
             onClearError={() => setError('')}
             onNavigate={(key) => {
               setActive(key);
+              setError('');
+              setReportRequest(null);
+            }}
+            onOpenReport={(kind) => {
+              setReportRequest((current) => ({
+                kind,
+                nonce: (current?.nonce ?? 0) + 1,
+              }));
+              setActive('reports');
               setError('');
             }}
             onOpenCreate={(key) => {

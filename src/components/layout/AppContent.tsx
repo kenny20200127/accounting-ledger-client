@@ -1,4 +1,4 @@
-import type { Company, MenuItem, PageKey } from '../../types';
+import type { Company, FinancialReportKind, MenuItem, PageKey } from '../../types';
 import { pages } from '../../config/pages';
 
 import {
@@ -27,9 +27,11 @@ type AppContentProps = {
   menus: MenuItem[];
   error: string;
   createRequest: number;
+  reportRequest: { kind: FinancialReportKind; nonce: number } | null;
   onClearError: () => void;
   onNavigate: (key: PageKey) => void;
   onOpenCreate: (key: PageKey) => void;
+  onOpenReport: (kind: FinancialReportKind) => void;
   onCompanyChanged: () => void;
   onSelectCompany: (companyId: string) => void;
 };
@@ -43,9 +45,11 @@ export function AppContent({
   menus,
   error,
   createRequest,
+  reportRequest,
   onClearError,
   onNavigate,
   onOpenCreate,
+  onOpenReport,
   onCompanyChanged,
   onSelectCompany,
 }: AppContentProps) {
@@ -86,7 +90,12 @@ export function AppContent({
 
   if (active === 'reports')
     return (
-      <FinancialReportsView key={companyId} token={token} companyId={companyId} />
+      <FinancialReportsView
+        key={`${companyId}:${reportRequest?.nonce ?? 0}`}
+        token={token}
+        companyId={companyId}
+        initialKind={reportRequest?.kind}
+      />
     );
 
   const recordProps = {
@@ -102,10 +111,19 @@ export function AppContent({
   if (active === 'ledger')
     return <LedgerCaptureView key={companyId} token={token} companyId={companyId} />;
 
-  if (active === 'accounts') return <ChartOfAccountsModule {...recordProps} />;
+  if (active === 'accounts')
+    return (
+      <ChartOfAccountsModule {...recordProps} onOpenReport={onOpenReport} />
+    );
 
   if (isAccountSetupPageKey(active))
-    return <AccountSetupModule pageKey={active} {...recordProps} />;
+    return (
+      <AccountSetupModule
+        pageKey={active}
+        {...recordProps}
+        onOpenReport={onOpenReport}
+      />
+    );
 
   return <RecordModule page={pages[active]} {...recordProps} />;
 }

@@ -25,6 +25,7 @@ export type RecordModuleProps = {
   createRequest: number;
   externalError?: string;
   onClearExternalError?: () => void;
+  onOpenReport?: () => void;
 };
 
 export function RecordModule({
@@ -36,6 +37,7 @@ export function RecordModule({
   createRequest,
   externalError,
   onClearExternalError,
+  onOpenReport,
 }: RecordModuleProps) {
   const [rows, setRows] = useState<Record<string, unknown>[]>([]);
   const [loading, setLoading] = useState(false);
@@ -304,6 +306,7 @@ export function RecordModule({
           setListPagination({ scope: listScope, number })
         }
         onDownloadPdf={(row) => void downloadRowPdf(row)}
+        onOpenReport={onOpenReport}
       />
 
       {dialog && page.fields && (

@@ -1,8 +1,9 @@
 import { API_PREFIX } from '../../api-url';
 import { useEffect, useState } from 'react';
 import { Download, RefreshCw } from 'lucide-react';
+import type { FinancialReportKind } from '../../types';
 import { LegacyMigrationReview } from './LegacyMigrationReview';
-type Kind = 'trial-balance' | 'profit-loss' | 'account-balances' | 'chart-of-accounts' | 'main-accounts';
+type Kind = FinancialReportKind;
 type Options = {
   company: { companyName: string; address: string; currency: string };
   groups: { code: string; name: string }[];
@@ -52,9 +53,9 @@ async function read<T>(url: string, token: string, signal?: AbortSignal): Promis
   if (!response.ok) throw new Error(Array.isArray(body.message) ? body.message.join(', ') : body.message || 'Unable to generate report.');
   return body;
 }
-export function FinancialReportsView({ token, companyId }: { token: string; companyId: string }) {
+export function FinancialReportsView({ token, companyId, initialKind }: { token: string; companyId: string; initialKind?: Kind }) {
   const [options, setOptions] = useState<Options | null>(null);
-  const [kind, setKind] = useState<Kind>('trial-balance');
+  const [kind, setKind] = useState<Kind>(initialKind ?? 'trial-balance');
   const [asOf, setAsOf] = useState(today);
   const [branchId, setBranchId] = useState('');
   const [fiscalYearId, setFiscalYearId] = useState('');

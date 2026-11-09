@@ -1,4 +1,4 @@
-import { Activity, ArrowUpRight, Download, Pencil, Plus, Search, Settings2, Trash2, X } from 'lucide-react';
+import { Activity, ArrowUpRight, Download, FileChartColumnIncreasing, Pencil, Plus, Search, Settings2, Trash2, X } from 'lucide-react';
 import type { Page } from '../../types';
 import { humanize, singular } from '../../lib/format';
 import { RecordCell } from '../common/RecordCell';
@@ -47,6 +47,7 @@ type RecordsViewProps = {
   onPageSizeChange: (size: number) => void;
   onPageChange: (page: number) => void;
   onDownloadPdf: (row: Record<string, unknown>) => void;
+  onOpenReport?: () => void;
 };
 
 export function RecordsView({
@@ -73,6 +74,7 @@ export function RecordsView({
   onPageSizeChange,
   onPageChange,
   onDownloadPdf,
+  onOpenReport,
 }: RecordsViewProps) {
   const visibleRows = isPaginated
     ? rows
@@ -91,6 +93,12 @@ export function RecordsView({
           <p>{page.description}</p>
         </div>
         <div className="heading-actions">
+          {onOpenReport && (
+            <button className="btn btn-light" onClick={onOpenReport}>
+              <FileChartColumnIncreasing size={15} />
+              Report
+            </button>
+          )}
           <button className="btn btn-light" onClick={onRefresh}>
             <Activity size={15} />
             Refresh

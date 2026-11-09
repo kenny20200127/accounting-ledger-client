@@ -41,6 +41,13 @@ export type Session = {
   menus: MenuItem[];
 };
 
+export type FinancialReportKind =
+  | 'trial-balance'
+  | 'profit-loss'
+  | 'account-balances'
+  | 'chart-of-accounts'
+  | 'main-accounts';
+
 export type PageKey =
   | 'dashboard'
   | 'companies'
