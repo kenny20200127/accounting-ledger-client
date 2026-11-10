@@ -52,8 +52,11 @@ export function LedgerCaptureView({ token, companyId }: ViewProps) {
     0,
   );
   const difference = debitCents - creditCents;
+  const accountCodes = lines.map((line) => line.accountCode).filter(Boolean);
+  const hasDuplicates = new Set(accountCodes).size !== accountCodes.length;
   const linesValid =
     lines.length >= 2 &&
+    !hasDuplicates &&
     lines.every(
       (line) => !!line.accountCode && amountPattern.test(line.amount),
     );
@@ -145,6 +148,10 @@ export function LedgerCaptureView({ token, companyId }: ViewProps) {
           `Line amount "${line.amount || '—'}" must be a positive number with up to two decimals.`,
         );
     }
+    if (hasDuplicates)
+      return setError(
+        'Each chart account can appear on only one line. Use one line per account.',
+      );
     if (debitCents !== creditCents)
       return setError(
         `Total debits must equal total credits. Out of balance by ${formatCents(Math.abs(difference))}.`,
@@ -344,19 +351,31 @@ export function LedgerCaptureView({ token, companyId }: ViewProps) {
                       token={token}
                       companyId={companyId}
                       value={line.accountCode}
+                      exclude={lines
+                        .filter((current) => current.id !== line.id)
+                        .map((current) => current.accountCode)
+                        .filter(Boolean)}
                       selectedLabel={
                         line.accountCode
                           ? `${line.accountCode} - ${line.accountName}`
                           : ''
                       }
                       onChange={(code, name) =>
-                        setLines((rows) =>
-                          rows.map((current) =>
+                        setLines((rows) => {
+                          if (
+                            code &&
+                            rows.some(
+                              (current) =>
+                                current.id !== line.id && current.accountCode === code,
+                            )
+                          )
+                            return rows;
+                          return rows.map((current) =>
                             current.id === line.id
                               ? { ...current, accountCode: code, accountName: name }
                               : current,
-                          ),
-                        )
+                          );
+                        })
                       }
                     />
                   </label>

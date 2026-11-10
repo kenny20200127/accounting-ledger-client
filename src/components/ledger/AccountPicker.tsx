@@ -10,6 +10,7 @@ type AccountPickerProps = {
   companyId: string;
   value: string;
   selectedLabel: string;
+  exclude?: string[];
   onChange: (accountCode: string, accountName: string) => void;
 };
 
@@ -18,6 +19,7 @@ export function AccountPicker({
   companyId,
   value,
   selectedLabel,
+  exclude,
   onChange,
 }: AccountPickerProps) {
   const [query, setQuery] = useState('');
@@ -27,6 +29,8 @@ export function AccountPicker({
   const [highlighted, setHighlighted] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
+  const blocked = new Set(exclude ?? []);
+  const availableOptions = options.filter((option) => !blocked.has(option.value));
 
   useEffect(() => {
     if (!open || !companyId) return;
@@ -45,6 +49,7 @@ export function AccountPicker({
         { signal: controller.signal },
       )
         .then((data) => {
+          if (controller.signal.aborted) return;
           const items = Array.isArray(data) ? data : (data.items ?? []);
           setOptions(
             items.map((account) => ({
@@ -84,6 +89,7 @@ export function AccountPicker({
   }, [highlighted, open]);
 
   function select(option: AccountOption) {
+    if (loading || blocked.has(option.value)) return;
     onChange(option.value, option.name);
     setOpen(false);
     setQuery('');
@@ -99,13 +105,15 @@ export function AccountPicker({
     }
     if (event.key === 'ArrowDown') {
       event.preventDefault();
-      setHighlighted((current) => Math.min(current + 1, options.length - 1));
+      setHighlighted((current) =>
+        Math.max(0, Math.min(current + 1, availableOptions.length - 1)),
+      );
     } else if (event.key === 'ArrowUp') {
       event.preventDefault();
       setHighlighted((current) => Math.max(current - 1, 0));
     } else if (event.key === 'Enter') {
       event.preventDefault();
-      if (options[highlighted]) select(options[highlighted]);
+      if (availableOptions[highlighted]) select(availableOptions[highlighted]);
     } else if (event.key === 'Escape') {
       setOpen(false);
       setQuery('');
@@ -155,10 +163,10 @@ export function AccountPicker({
         <ul className="combobox-list" ref={listRef} role="listbox">
           {loading ? (
             <li className="combobox-empty">Loading…</li>
-          ) : options.length === 0 ? (
+          ) : availableOptions.length === 0 ? (
             <li className="combobox-empty">No posting accounts match</li>
           ) : (
-            options.map((option, index) => (
+            availableOptions.map((option, index) => (
               <li
                 key={option.value}
                 role="option"
