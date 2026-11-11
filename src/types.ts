@@ -24,6 +24,7 @@ export type Company = {
   companyCode?: string;
   baseCurrency?: string;
   email?: string;
+  profitAndLossAmount?: string | number;
 };
 
 export type Session = {
@@ -45,7 +46,7 @@ export type FinancialReportKind =
   | 'trial-balance'
   | 'trial-balance-detail'
   | 'profit-loss'
-  | 'account-balances'
+  | 'balance-sheet'
   | 'chart-of-accounts'
   | 'main-accounts';
 

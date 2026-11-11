@@ -25,6 +25,7 @@ const fields = [
   ['baseCurrency', 'Base currency'],
   ['fiscalYearStartMonth', 'Fiscal year start month'],
   ['fiscalYearStartDay', 'Fiscal year start day'],
+  ['profitAndLossAmount', 'Profit and loss total'],
   ['primaryColor', 'Primary color'],
   ['secondaryColor', 'Secondary color'],
 ];
@@ -34,6 +35,7 @@ const defaults: Record<string, string> = {
   baseCurrency: 'NGN',
   fiscalYearStartMonth: '1',
   fiscalYearStartDay: '1',
+  profitAndLossAmount: '0.00',
   primaryColor: '#176246',
   secondaryColor: '#edf5ef',
 };
@@ -128,6 +130,7 @@ export function CompanyAdministration({
       );
       body.fiscalYearStartMonth = Number(form.fiscalYearStartMonth);
       body.fiscalYearStartDay = Number(form.fiscalYearStartDay);
+      body.profitAndLossAmount = form.profitAndLossAmount || '0';
       if (cid) await api('companies/' + cid, token, body, 'PATCH');
       else {
         const result = await api<{ company: Company }>(
@@ -316,12 +319,15 @@ export function CompanyAdministration({
                 type={
                   key.endsWith('Color')
                     ? 'color'
-                    : key.startsWith('fiscalYear')
+                    : key === 'profitAndLossAmount'
                       ? 'number'
-                      : key === 'email'
-                        ? 'email'
-                        : 'text'
+                      : key.startsWith('fiscalYear')
+                        ? 'number'
+                        : key === 'email'
+                          ? 'email'
+                          : 'text'
                 }
+                step={key === 'profitAndLossAmount' ? '0.01' : undefined}
                 min={key.startsWith('fiscalYear') ? 1 : undefined}
                 max={
                   key === 'fiscalYearStartMonth'

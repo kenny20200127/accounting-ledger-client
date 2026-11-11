@@ -23,7 +23,7 @@ const kinds: { id: Kind; title: string; description: string }[] = [
   { id: 'trial-balance-detail', title: 'Detail Trial Balance', description: 'Balances by chart account' },
   { id: 'trial-balance', title: 'Summary Trial Balance', description: 'Balances by main account' },
   { id: 'profit-loss', title: 'Profit & Loss', description: 'Income, expenses, and profit or loss' },
-  { id: 'account-balances', title: 'Balance of Account', description: 'Detailed balances by account group' },
+  { id: 'balance-sheet', title: 'Balance Sheet', description: 'Account balances and the profit and loss total' },
   { id: 'chart-of-accounts', title: 'Chart of Accounts', description: 'Accounts grouped by main account' },
   { id: 'main-accounts', title: 'Main Accounts', description: 'Main account codes and classifications' },
 ];
@@ -83,9 +83,9 @@ export function FinancialReportsView({ token, companyId, initialKind }: { token:
   const params = new URLSearchParams({ companyId, report: kind, asOf, includeZero: String(includeZero) });
   if (branchId) params.set('branchId', branchId);
   if (fiscalYearId) params.set('fiscalYearId', fiscalYearId);
-  if (kind === 'account-balances' && selectedGroups.length) params.set('groupCodes', selectedGroups.join(','));
+  if (kind === 'balance-sheet' && selectedGroups.length) params.set('groupCodes', selectedGroups.join(','));
   const query = params.toString();
-  const validFilters = !!asOf && !(kind === 'account-balances' && preset === 'custom' && !customGroups.length);
+  const validFilters = !!asOf && !(kind === 'balance-sheet' && preset === 'custom' && !customGroups.length);
   useEffect(() => {
     const controller = new AbortController();
     setPageNumber(1); setReport(null); setPreviewQuery('');
@@ -131,9 +131,9 @@ export function FinancialReportsView({ token, companyId, initialKind }: { token:
         <label>As at date<input type="date" required value={asOf} onChange={e => { setAsOf(e.target.value); setFiscalYearId(''); }} /></label>
         {!structural && <label>Branch<select value={branchId} onChange={e => setBranchId(e.target.value)}><option value="">All branches</option>{options?.branches.map(b => <option key={b.branchId} value={b.branchId}>{b.branchName}</option>)}</select></label>}
         {!structural && <label>Fiscal year<select value={fiscalYearId} onChange={e => setFiscalYearId(e.target.value)}><option value="">Detect from report date</option>{options?.fiscalYears.filter(f => f.startDate <= asOf && f.endDate >= asOf).map(f => <option key={f.fiscalYearId} value={f.fiscalYearId}>{f.yearName}</option>)}</select></label>}
-        {kind === 'account-balances' && <label>Account group<select value={preset} onChange={e => setPreset(e.target.value)}><option value="all">All accounts</option>{availablePresets.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}<option value="custom">Choose account groups</option></select></label>}
+        {kind === 'balance-sheet' && <label>Account group<select value={preset} onChange={e => setPreset(e.target.value)}><option value="all">All accounts</option>{availablePresets.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}<option value="custom">Choose account groups</option></select></label>}
       </div>
-      {kind === 'account-balances' && preset === 'custom' && <div className="report-group-list" aria-label="Choose account groups">{options?.groups.map(group => <label key={group.code}><input type="checkbox" checked={customGroups.includes(group.code)} disabled={customGroups.length >= 30 && !customGroups.includes(group.code)} onChange={event => setCustomGroups(current => event.target.checked ? [...current, group.code] : current.filter(code => code !== group.code))} />{group.code} - {group.name}</label>)}</div>}
+      {kind === 'balance-sheet' && preset === 'custom' && <div className="report-group-list" aria-label="Choose account groups">{options?.groups.map(group => <label key={group.code}><input type="checkbox" checked={customGroups.includes(group.code)} disabled={customGroups.length >= 30 && !customGroups.includes(group.code)} onChange={event => setCustomGroups(current => event.target.checked ? [...current, group.code] : current.filter(code => code !== group.code))} />{group.code} - {group.name}</label>)}</div>}
       <div className="report-filter-actions"><label className="report-zero-toggle"><input type="checkbox" checked={includeZero} onChange={e => setIncludeZero(e.target.checked)} /> Include zero balances</label>
         <button className="btn btn-light" type="submit" disabled={!options || loading || !validFilters}><RefreshCw size={15} />{loading ? 'Generating...' : 'Generate report'}</button>
         <button className="btn btn-primary" type="button" disabled={loading || downloading || !report || previewQuery !== query} onClick={() => void download()}><Download size={15} />{downloading ? 'Preparing PDF...' : 'Download PDF'}</button>
@@ -150,6 +150,7 @@ export function FinancialReportsView({ token, companyId, initialKind }: { token:
         {report.kind === 'trial-balance' && <p>Summary Trial Balance groups balances by main account.</p>}
         {(report.kind === 'trial-balance' || report.kind === 'trial-balance-detail') && <p>Current month shows net movement. Year-to-date balances include brought-forward posted entries.</p>}
         {report.kind === 'profit-loss' && <p>Credit income and profit appear in parentheses. Year to date begins {report.fiscalYearStart}.</p>}
+        {report.kind === 'balance-sheet' && <p>Profit and loss uses the chart account named Profit and Loss with the total saved in Company Settings.</p>}
         {report.kind === 'chart-of-accounts' && <p>Chart accounts are grouped by main account.</p>}
         {report.kind === 'main-accounts' && <p>Main accounts define the code range and classification used by their chart accounts.</p>}
         {report.warnings.map(warning => <p key={warning} className="report-data-note">{warning}</p>)}
