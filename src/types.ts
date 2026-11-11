@@ -25,6 +25,7 @@ export type Company = {
   baseCurrency?: string;
   email?: string;
   profitAndLossAmount?: string | number;
+  profitAndLossAccountCode?: string | null;
 };
 
 export type Session = {

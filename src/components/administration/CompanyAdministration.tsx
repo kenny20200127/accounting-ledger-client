@@ -3,7 +3,7 @@ import type { FormEvent } from 'react';
 import { browserTitle } from '../../company-theme';
 import type { Company } from '../../types';
 import { PasswordInput } from '../common/PasswordInput';
-import { createPortalApi } from './api';
+import { createPortalApi, fetchApi } from './api';
 import type { AdministrationProps } from './types';
 
 const fields = [
@@ -25,6 +25,7 @@ const fields = [
   ['baseCurrency', 'Base currency'],
   ['fiscalYearStartMonth', 'Fiscal year start month'],
   ['fiscalYearStartDay', 'Fiscal year start day'],
+  ['profitAndLossAccountCode', 'Profit and loss account'],
   ['profitAndLossAmount', 'Profit and loss total'],
   ['primaryColor', 'Primary color'],
   ['secondaryColor', 'Secondary color'],
@@ -62,6 +63,9 @@ export function CompanyAdministration({
     lastName: '',
   });
   const [logo, setLogo] = useState<File | null>(null);
+  const [accountOptions, setAccountOptions] = useState<
+    { accountCode: string; accountName: string }[]
+  >([]);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -96,6 +100,27 @@ export function CompanyAdministration({
       live = false;
     };
   }, [token, companyId, platform, tick]);
+
+  useEffect(() => {
+    if (!editing) {
+      setAccountOptions([]);
+      return;
+    }
+    let live = true;
+    fetchApi<{ accountCode: string; accountName: string }[]>(
+      'accounts?companyId=' + encodeURIComponent(editing),
+      token,
+    )
+      .then((rows) => {
+        if (live) setAccountOptions(Array.isArray(rows) ? rows : []);
+      })
+      .catch(() => {
+        if (live) setAccountOptions([]);
+      });
+    return () => {
+      live = false;
+    };
+  }, [editing, token]);
 
   function edit(company: Company) {
     setEditing(company.companyId);
@@ -306,41 +331,57 @@ export function CompanyAdministration({
           {fields.map(([key, label]) => (
             <label key={key}>
               {label}
-              <input
-                required={[
-                  'companyCode',
-                  'companyName',
-                  'baseCurrency',
-                  'fiscalYearStartMonth',
-                  'fiscalYearStartDay',
-                  'primaryColor',
-                  'secondaryColor',
-                ].includes(key)}
-                type={
-                  key.endsWith('Color')
-                    ? 'color'
-                    : key === 'profitAndLossAmount'
-                      ? 'number'
-                      : key.startsWith('fiscalYear')
+              {key === 'profitAndLossAccountCode' ? (
+                <select
+                  value={form[key] ?? ''}
+                  onChange={(event) =>
+                    setForm({ ...form, [key]: event.target.value })
+                  }
+                >
+                  <option value="">Not selected</option>
+                  {accountOptions.map((account) => (
+                    <option key={account.accountCode} value={account.accountCode}>
+                      {account.accountCode} - {account.accountName}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  required={[
+                    'companyCode',
+                    'companyName',
+                    'baseCurrency',
+                    'fiscalYearStartMonth',
+                    'fiscalYearStartDay',
+                    'primaryColor',
+                    'secondaryColor',
+                  ].includes(key)}
+                  type={
+                    key.endsWith('Color')
+                      ? 'color'
+                      : key === 'profitAndLossAmount'
                         ? 'number'
-                        : key === 'email'
-                          ? 'email'
-                          : 'text'
-                }
-                step={key === 'profitAndLossAmount' ? '0.01' : undefined}
-                min={key.startsWith('fiscalYear') ? 1 : undefined}
-                max={
-                  key === 'fiscalYearStartMonth'
-                    ? 12
-                    : key === 'fiscalYearStartDay'
-                      ? 28
-                      : undefined
-                }
-                value={form[key] ?? ''}
-                onChange={(event) =>
-                  setForm({ ...form, [key]: event.target.value })
-                }
-              />
+                        : key.startsWith('fiscalYear')
+                          ? 'number'
+                          : key === 'email'
+                            ? 'email'
+                            : 'text'
+                  }
+                  step={key === 'profitAndLossAmount' ? '0.01' : undefined}
+                  min={key.startsWith('fiscalYear') ? 1 : undefined}
+                  max={
+                    key === 'fiscalYearStartMonth'
+                      ? 12
+                      : key === 'fiscalYearStartDay'
+                        ? 28
+                        : undefined
+                  }
+                  value={form[key] ?? ''}
+                  onChange={(event) =>
+                    setForm({ ...form, [key]: event.target.value })
+                  }
+                />
+              )}
             </label>
           ))}
         </div>

@@ -150,7 +150,7 @@ export function FinancialReportsView({ token, companyId, initialKind }: { token:
         {report.kind === 'trial-balance' && <p>Summary Trial Balance groups balances by main account.</p>}
         {(report.kind === 'trial-balance' || report.kind === 'trial-balance-detail') && <p>Current month shows net movement. Year-to-date balances include brought-forward posted entries.</p>}
         {report.kind === 'profit-loss' && <p>Credit income and profit appear in parentheses. Year to date begins {report.fiscalYearStart}.</p>}
-        {report.kind === 'balance-sheet' && <p>Profit and loss uses the chart account named Profit and Loss with the total saved in Company Settings.</p>}
+        {report.kind === 'balance-sheet' && <p>Assets, liabilities, and equity are totaled separately. The Profit and Loss line uses the chart account selected in Company Settings and the total saved there.</p>}
         {report.kind === 'chart-of-accounts' && <p>Chart accounts are grouped by main account.</p>}
         {report.kind === 'main-accounts' && <p>Main accounts define the code range and classification used by their chart accounts.</p>}
         {report.warnings.map(warning => <p key={warning} className="report-data-note">{warning}</p>)}
