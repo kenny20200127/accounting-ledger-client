@@ -1,5 +1,6 @@
 import type { Company, FinancialReportKind, MenuItem, PageKey } from '../../types';
 import { pages } from '../../config/pages';
+import { menuCodeToPageKey } from '../../types';
 
 import {
   AccountSetupModule,
@@ -53,12 +54,25 @@ export function AppContent({
   onCompanyChanged,
   onSelectCompany,
 }: AppContentProps) {
+  if (!menus.some((menu) => menuCodeToPageKey[menu.menuCode] === active && menu.canView !== false))
+    return (
+      <section className="admin-card" role="status">
+        <h2>{menus.length ? 'Menu unavailable' : 'No menus available'}</h2>
+        <p>
+          {error || (menus.length
+            ? 'This menu is not available for your company or role. Choose another menu.'
+            : 'Contact your administrator to enable access to company functionality.')}
+        </p>
+      </section>
+    );
+
   if (active === 'dashboard')
     return (
       <Dashboard
         companies={companies}
         companyId={companyId}
         token={token}
+        menus={menus}
         onNavigate={onNavigate}
         onOpenCreate={onOpenCreate}
       />

@@ -20,7 +20,8 @@ type Report = {
   warnings: string[]; balanced?: boolean;
 };
 const kinds: { id: Kind; title: string; description: string }[] = [
-  { id: 'trial-balance', title: 'Trial Balance', description: 'Current month and year-to-date balances' },
+  { id: 'trial-balance-detail', title: 'Detail Trial Balance', description: 'Balances by chart account' },
+  { id: 'trial-balance', title: 'Summary Trial Balance', description: 'Balances by main account' },
   { id: 'profit-loss', title: 'Profit & Loss', description: 'Income, expenses, and profit or loss' },
   { id: 'account-balances', title: 'Balance of Account', description: 'Detailed balances by account group' },
   { id: 'chart-of-accounts', title: 'Chart of Accounts', description: 'Accounts grouped by main account' },
@@ -145,7 +146,9 @@ export function FinancialReportsView({ token, companyId, initialKind }: { token:
     {report && previewQuery === query && <section className="table-panel report-preview">
       <header className="report-paper-heading">{report.logoData && <img src={report.logoData} alt="Company logo" style={{maxWidth:160,maxHeight:65,objectFit:'contain'}} />}<h2>{report.companyName}</h2><p>{report.address}</p><h3>{report.title}</h3><p>{report.kind === 'chart-of-accounts' || report.kind === 'main-accounts' ? `As at ${report.asOf}` : `As at ${report.asOf} | ${report.branchName} | ${report.currency}`}</p><small>Produced on {new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Lagos', dateStyle: 'medium', timeStyle: 'short' }).format(new Date(report.generatedAt))}{report.fiscalYearStart ? ` | Fiscal year starts ${report.fiscalYearStart}` : ''}</small></header>
       <div className="report-notes">
-        {report.kind === 'trial-balance' && <p>Current month shows net movement. Year-to-date balances include brought-forward posted entries.</p>}
+        {report.kind === 'trial-balance-detail' && <p>Detail Trial Balance lists balances by chart account.</p>}
+        {report.kind === 'trial-balance' && <p>Summary Trial Balance groups balances by main account.</p>}
+        {(report.kind === 'trial-balance' || report.kind === 'trial-balance-detail') && <p>Current month shows net movement. Year-to-date balances include brought-forward posted entries.</p>}
         {report.kind === 'profit-loss' && <p>Credit income and profit appear in parentheses. Year to date begins {report.fiscalYearStart}.</p>}
         {report.kind === 'chart-of-accounts' && <p>Chart accounts are grouped by main account.</p>}
         {report.kind === 'main-accounts' && <p>Main accounts define the code range and classification used by their chart accounts.</p>}
@@ -156,7 +159,7 @@ export function FinancialReportsView({ token, companyId, initialKind }: { token:
         {!count && <tr><td colSpan={report.columns.length} className="empty">No matching accounts for these filters.</td></tr>}
       </tbody><tfoot>{report.totals.map(total => <tr key={total.label}>{report.columns.map((c, index) => <td key={c.key} className={c.numeric ? 'report-number' : ''}>{c.numeric ? money(total.values[c.key]) : c.key === 'description' || (index === 0 && !report.columns.some(column => column.key === 'description')) ? total.label : ''}</td>)}</tr>)}</tfoot></table></div>
       <div className="table-footer"><span>{count} report rows. Totals cover all matching records; PDF includes every page.</span><div className="pagination-controls"><button className="btn btn-light" disabled={pageNumber <= 1} onClick={() => setPageNumber(n => n - 1)}>Previous</button><span>Page {pageNumber} of {pages}</span><button className="btn btn-light" disabled={pageNumber >= pages} onClick={() => setPageNumber(n => n + 1)}>Next</button></div></div>
-      {report.kind === 'trial-balance' && <p className="report-balance-status">{report.balanced ? 'TRIAL BALANCE OK' : 'TRIAL BALANCE REQUIRES REVIEW'}</p>}
+      {(report.kind === 'trial-balance' || report.kind === 'trial-balance-detail') && <p className="report-balance-status">{report.balanced ? 'TRIAL BALANCE OK' : 'TRIAL BALANCE REQUIRES REVIEW'}</p>}
     </section>}
     <details className="report-migration-details"><summary>Migration reconciliation</summary><LegacyMigrationReview token={token} companyId={companyId} refresh={refresh} /></details>
   </div>;

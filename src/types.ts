@@ -43,6 +43,7 @@ export type Session = {
 
 export type FinancialReportKind =
   | 'trial-balance'
+  | 'trial-balance-detail'
   | 'profit-loss'
   | 'account-balances'
   | 'chart-of-accounts'
@@ -106,6 +107,8 @@ export type Field = {
   step?: string;
   select?: SelectConfig;
   lineFields?: Field[];
+  /** Shown only when this menu is enabled for the company. */
+  menuCode?: string;
 };
 
 export type Page = {
@@ -128,6 +131,8 @@ export type Page = {
   deletable?: boolean;
   /** Helper text shown at the top of the create dialog. */
   createNote?: string;
+  /** Column name to the menu that must be enabled for it to be shown. */
+  columnMenuCodes?: Record<string, string>;
 };
 
 export const menuCodeToPageKey: Record<string, PageKey> = {

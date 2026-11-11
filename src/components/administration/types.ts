@@ -24,10 +24,18 @@ export type ManagedUser = {
   roles: Role[];
 };
 
+export type CompanyMenu = {
+  menuId: string;
+  menuCode: string;
+  menuName: string;
+  isEnabled: boolean;
+};
+
 export type Permission = {
   menuId: string;
   menuName: string;
   menuCode: string;
+  companyEnabled: boolean;
   canView: boolean;
   canCreate: boolean;
   canEdit: boolean;

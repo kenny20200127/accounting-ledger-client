@@ -25,6 +25,7 @@ function columnLeaf(path: string): string {
 
 type RecordsViewProps = {
   page: Page;
+  columns: string[];
   companyName?: string;
   rows: Record<string, unknown>[];
   loading: boolean;
@@ -52,6 +53,7 @@ type RecordsViewProps = {
 
 export function RecordsView({
   page,
+  columns,
   companyName,
   rows,
   loading,
@@ -144,7 +146,7 @@ export function RecordsView({
           <table>
             <thead>
               <tr>
-                {(page.columns ?? []).map((column) => (
+                {columns.map((column) => (
                   <th key={column}>{columnLabel(column)}</th>
                 ))}
                 <th>Details</th>
@@ -153,7 +155,7 @@ export function RecordsView({
             <tbody>
               {loading ? (
                 <tr>
-                  <td className="empty" colSpan={(page.columns?.length ?? 0) + 1}>
+                  <td className="empty" colSpan={columns.length + 1}>
                     Loading records…
                   </td>
                 </tr>
@@ -179,7 +181,7 @@ export function RecordsView({
                         index,
                     )}
                   >
-                    {page.columns?.map((column) => (
+                    {columns.map((column) => (
                       <td key={column}>
                         <RecordCell
                           column={columnLeaf(column)}
@@ -230,7 +232,7 @@ export function RecordsView({
                 ))
               ) : (
                 <tr>
-                  <td className="empty" colSpan={(page.columns?.length ?? 0) + 1}>
+                  <td className="empty" colSpan={columns.length + 1}>
                     <Search size={19} />
                     <b>
                       {error ? 'Could not load records' : 'Nothing here yet'}

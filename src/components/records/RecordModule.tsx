@@ -70,6 +70,16 @@ export function RecordModule({
   const menuAccess = menus.find((item) => item.menuCode === page.menuCode);
   const canEdit = !!menuAccess?.canEdit;
   const canDelete = !!menuAccess?.canDelete;
+  const enabledMenuCodes = new Set(
+    menus.filter((item) => item.canView !== false).map((item) => item.menuCode),
+  );
+  const fields = page.fields?.filter(
+    (field) => !field.menuCode || enabledMenuCodes.has(field.menuCode),
+  );
+  const columns = (page.columns ?? []).filter((column) => {
+    const menuCode = page.columnMenuCodes?.[column];
+    return !menuCode || enabledMenuCodes.has(menuCode);
+  });
   const deleteLabel = deleteTarget
     ? String(
         deleteTarget.accountName ??
@@ -273,6 +283,7 @@ export function RecordModule({
     <>
       <RecordsView
         page={page}
+        columns={columns}
         companyName={companyName}
         rows={rows}
         loading={loading}
@@ -309,10 +320,10 @@ export function RecordModule({
         onOpenReport={onOpenReport}
       />
 
-      {dialog && page.fields && (
+      {dialog && fields && (
         <CreateDialog
           title={page.title}
-          fields={page.fields}
+          fields={fields}
           note={page.createNote}
           token={token}
           companyId={companyId}
@@ -321,10 +332,10 @@ export function RecordModule({
         />
       )}
 
-      {editing && page.fields && page.editFields && (
+      {editing && fields && page.editFields && (
         <CreateDialog
           title={page.title}
-          fields={page.fields.filter((field) =>
+          fields={fields.filter((field) =>
             page.editFields!.includes(field.name),
           )}
           token={token}

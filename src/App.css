@@ -760,6 +760,28 @@
     }
 }
 
+.kpi-grid.ledger-kpis {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+@media (max-width: 1500px) {
+    .kpi-grid.ledger-kpis {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 900px) {
+    .kpi-grid.ledger-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    .kpi-grid.ledger-kpis {
+        grid-template-columns: 1fr;
+    }
+}
+
 .kpi-card {
     background: #ffffff;
     border: 1px solid var(--line);

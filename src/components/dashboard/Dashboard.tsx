@@ -1,25 +1,45 @@
 import { API_PREFIX } from '../../api-url';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ArrowUpRight,
   CheckCircle2,
   Clock,
+  CalendarCheck,
+  CalendarDays,
+  CalendarRange,
   Banknote,
   FileText,
   Landmark,
   RefreshCw,
   Wallet,
-  TrendingDown,
-  TrendingUp,
   Users,
   AlertCircle,
   BookOpen,
 } from 'lucide-react';
-import type { Company, PageKey } from '../../types';
+import { menuCodeToPageKey } from '../../types';
+import type { Company, MenuItem, PageKey } from '../../types';
 import { formatDate, formatMoney } from '../../lib/format';
+
+type LedgerPeriod = { transactions: number; posted: string };
+
+type LedgerStats = {
+  asOf: string;
+  today: LedgerPeriod;
+  week: LedgerPeriod;
+  month: LedgerPeriod;
+  year: LedgerPeriod;
+};
+
+const ledgerPeriods = [
+  { key: 'today', label: 'Transactions today', icon: Clock },
+  { key: 'week', label: 'Transactions this week', icon: CalendarDays },
+  { key: 'month', label: 'Transactions this month', icon: CalendarRange },
+  { key: 'year', label: 'Transactions this year', icon: CalendarCheck },
+] as const;
 
 interface DashboardProps {
   companies: Company[];
+  menus: MenuItem[];
   companyId: string;
   token: string;
   onNavigate: (key: PageKey) => void;
@@ -28,6 +48,7 @@ interface DashboardProps {
 
 export function Dashboard({
   companies,
+  menus,
   companyId,
   token,
   onNavigate,
@@ -35,14 +56,40 @@ export function Dashboard({
 }: DashboardProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [timeRange, setTimeRange] = useState<'month' | 'quarter' | 'year' | 'all'>('month');
+  const [ledgerStats, setLedgerStats] = useState<LedgerStats | null>(null);
   const [activeTab, setActiveTab] = useState<'invoices' | 'expenses' | 'banking'>('invoices');
+  const [refreshCount, setRefreshCount] = useState(0);
+
+  const allowedPages = useMemo(() => new Set<PageKey>(
+    menus
+      .filter((menu) => menu.canView !== false)
+      .map((menu) => menuCodeToPageKey[menu.menuCode])
+      .filter((page): page is PageKey => Boolean(page)),
+  ), [menus]);
+  const canCreateInvoice = menus.some((menu) =>
+    menuCodeToPageKey[menu.menuCode] === 'invoices' &&
+    menu.canView !== false && menu.canCreate === true,
+  );
+  const activityTab = allowedPages.has(activeTab)
+    ? activeTab
+    : allowedPages.has('invoices')
+      ? 'invoices'
+      : allowedPages.has('expenses')
+        ? 'expenses'
+        : allowedPages.has('banking')
+          ? 'banking'
+          : null;
+  const hasLedgerStats = allowedPages.has('ledger');
+  const showCustomerStrength = allowedPages.has('customers');
+  const hasKpis = hasLedgerStats || showCustomerStrength;
+  const hasShortcuts = hasKpis || allowedPages.has('journals') || allowedPages.has('reports');
+  const hasFiscalStatus = allowedPages.has('fiscal-years') ||
+    allowedPages.has('accounting-periods') || allowedPages.has('ledger');
 
   // Raw data from endpoints
   const [invoices, setInvoices] = useState<Record<string, unknown>[]>([]);
   const [expenses, setExpenses] = useState<Record<string, unknown>[]>([]);
   const [customers, setCustomers] = useState<Record<string, unknown>[]>([]);
-  const [accounts, setAccounts] = useState<Record<string, unknown>[]>([]);
   const [bankAccounts, setBankAccounts] = useState<Record<string, unknown>[]>([]);
   const [fiscalYears, setFiscalYears] = useState<Record<string, unknown>[]>([]);
   const [periods, setPeriods] = useState<Record<string, unknown>[]>([]);
@@ -50,64 +97,78 @@ export function Dashboard({
   const company = companies.find((c) => c.companyId === companyId);
   const currency = company?.baseCurrency || 'NGN';
 
-  // Fetch all accounting data in parallel for the selected company
-  const loadDashboardData = useCallback(async () => {
-    if (!companyId || !token) return;
-    setLoading(true);
-    setError('');
-
-    const headers = { Authorization: `Bearer ${token}` };
-
-    try {
-      const [
-        invRes,
-        expRes,
-        custRes,
-        accRes,
-        bankRes,
-        fyRes,
-        perRes,
-      ] = await Promise.allSettled([
-        fetch(`${API_PREFIX}/invoices?companyId=${companyId}`, { headers }).then((r) => r.json()),
-        fetch(`${API_PREFIX}/expenses?companyId=${companyId}`, { headers }).then((r) => r.json()),
-        fetch(`${API_PREFIX}/customers?companyId=${companyId}`, { headers }).then((r) => r.json()),
-        fetch(`${API_PREFIX}/accounts?companyId=${companyId}`, { headers }).then((r) => r.json()),
-        fetch(`${API_PREFIX}/banking/accounts?companyId=${companyId}`, { headers }).then((r) => r.json()),
-        fetch(`${API_PREFIX}/fiscal-years?companyId=${companyId}`, { headers }).then((r) => r.json()),
-        fetch(`${API_PREFIX}/accounting-periods`, { headers }).then((r) => r.json()),
-      ]);
-
-      if (invRes.status === 'fulfilled' && Array.isArray(invRes.value)) setInvoices(invRes.value);
-      if (expRes.status === 'fulfilled' && Array.isArray(expRes.value)) setExpenses(expRes.value);
-      if (custRes.status === 'fulfilled' && Array.isArray(custRes.value)) setCustomers(custRes.value);
-      if (accRes.status === 'fulfilled' && Array.isArray(accRes.value)) setAccounts(accRes.value);
-      if (bankRes.status === 'fulfilled' && Array.isArray(bankRes.value)) setBankAccounts(bankRes.value);
-      if (fyRes.status === 'fulfilled' && Array.isArray(fyRes.value)) setFiscalYears(fyRes.value);
-      if (perRes.status === 'fulfilled' && Array.isArray(perRes.value)) setPeriods(perRes.value);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load dashboard metrics');
-    } finally {
-      setLoading(false);
-    }
-  }, [companyId, token]);
-
   useEffect(() => {
-    loadDashboardData();
-  }, [loadDashboardData]);
+    const controller = new AbortController();
+    const { signal } = controller;
+    setError('');
+    setLedgerStats(null);
+    setInvoices([]);
+    setExpenses([]);
+    setCustomers([]);
+    setBankAccounts([]);
+    setFiscalYears([]);
+    setPeriods([]);
+
+    if (!companyId || !token) {
+      setLoading(false);
+      return () => controller.abort();
+    }
+
+    setLoading(true);
+    const headers = { Authorization: `Bearer ${token}` };
+    const loads: Promise<void>[] = [];
+    const loadList = async (
+      menuCode: PageKey,
+      url: string,
+      setData: (rows: Record<string, unknown>[]) => void,
+    ) => {
+      if (!allowedPages.has(menuCode)) return;
+      const response = await fetch(url, { headers, signal });
+      if (!response.ok) throw new Error('Failed to load dashboard metrics');
+      const data: unknown = await response.json();
+      if (!Array.isArray(data)) throw new Error('Failed to load dashboard metrics');
+      if (!signal.aborted) setData(data);
+    };
+
+    loads.push(
+      loadList('invoices', `${API_PREFIX}/invoices?companyId=${companyId}`, setInvoices),
+      loadList('expenses', `${API_PREFIX}/expenses?companyId=${companyId}`, setExpenses),
+      loadList('customers', `${API_PREFIX}/customers?companyId=${companyId}`, setCustomers),
+      loadList('banking', `${API_PREFIX}/banking/accounts?companyId=${companyId}`, setBankAccounts),
+      loadList('fiscal-years', `${API_PREFIX}/fiscal-years?companyId=${companyId}`, setFiscalYears),
+      loadList('accounting-periods', `${API_PREFIX}/accounting-periods`, setPeriods),
+    );
+    if (allowedPages.has('ledger'))
+      loads.push(
+        fetch(`${API_PREFIX}/ledger-batches/stats?companyId=${companyId}`, {
+          headers,
+          signal,
+        }).then(async (response) => {
+          if (!response.ok) throw new Error('Failed to load ledger statistics');
+          const data = (await response.json()) as LedgerStats;
+          if (!signal.aborted) setLedgerStats(data);
+        }),
+      );
+
+    void Promise.allSettled(loads).then((results) => {
+      if (signal.aborted) return;
+      if (results.some((result) => result.status === 'rejected')) {
+        setError('Some dashboard metrics could not be loaded.');
+      }
+      setLoading(false);
+    });
+
+    return () => controller.abort();
+  }, [companyId, token, allowedPages, refreshCount]);
 
   // Calculations
   const metrics = useMemo(() => {
     let totalInvoiced = 0;
-    let totalReceivables = 0;
     let totalPaidInvoices = 0;
 
     invoices.forEach((inv) => {
-      const total = Number(inv.totalAmount || 0);
-      const paid = Number(inv.amountPaid || 0);
-      const balance = Number(inv.balanceDue !== undefined ? inv.balanceDue : total - paid);
-      totalInvoiced += total;
-      totalPaidInvoices += paid;
-      totalReceivables += balance > 0 ? balance : 0;
+      totalInvoiced += Number(inv.totalAmount || 0);
+      totalPaidInvoices += Number(inv.amountPaid || 0);
     });
 
     let totalExpenses = 0;
@@ -137,20 +198,19 @@ export function Dashboard({
 
     return {
       totalInvoiced,
-      totalReceivables,
       totalPaidInvoices,
       totalExpenses,
       totalCash,
       netMargin,
       marginPercent,
       customerCount: customers.length,
-      accountCount: accounts.length,
-      bankAccountCount: bankAccounts.length,
+      activeCustomerCount: customers.filter(
+        (customer) => customer.isActive !== false,
+      ).length,
       invoiceCount: invoices.length,
-      expenseCount: expenses.length,
       invoiceStatusCount,
     };
-  }, [invoices, expenses, customers, accounts, bankAccounts]);
+  }, [invoices, expenses, customers, bankAccounts]);
 
   // Current active fiscal year & period
   const activeFiscalYear = useMemo(() => {
@@ -193,40 +253,13 @@ export function Dashboard({
             </span>
           </h1>
           <p>
-            Here is your financial overview, operating metrics, and cash flow
+            Here is your ledger activity, customer strength, and posting
             position for {company?.companyName ?? 'your active company'}.
           </p>
         </div>
 
         <div className="hero-controls">
-          <div className="time-range-group">
-            <button
-              className={`range-pill ${timeRange === 'month' ? 'active' : ''}`}
-              onClick={() => setTimeRange('month')}
-            >
-              This Month
-            </button>
-            <button
-              className={`range-pill ${timeRange === 'quarter' ? 'active' : ''}`}
-              onClick={() => setTimeRange('quarter')}
-            >
-              Quarter
-            </button>
-            <button
-              className={`range-pill ${timeRange === 'year' ? 'active' : ''}`}
-              onClick={() => setTimeRange('year')}
-            >
-              YTD
-            </button>
-            <button
-              className={`range-pill ${timeRange === 'all' ? 'active' : ''}`}
-              onClick={() => setTimeRange('all')}
-            >
-              All Time
-            </button>
-          </div>
-
-          {onOpenCreate && (
+          {onOpenCreate && canCreateInvoice && (
             <button
               className="btn btn-primary"
               style={{ padding: '6px 12px', fontSize: 12.5 }}
@@ -238,7 +271,7 @@ export function Dashboard({
 
           <button
             className="btn btn-light refresh-dash-btn"
-            onClick={loadDashboardData}
+            onClick={() => setRefreshCount((value) => value + 1)}
             title="Reload metrics"
           >
             <RefreshCw size={14} className={loading ? 'spinning' : ''} />
@@ -254,141 +287,40 @@ export function Dashboard({
         </div>
       )}
 
-      {/* Primary KPI Cards Grid (6 Financial Metrics) */}
-      <section className="kpi-grid">
-        {/* KPI 1: Total Revenue / Invoiced */}
-        <div
-          className="kpi-card revenue"
-          onClick={() => onNavigate('invoices')}
-          role="button"
-          tabIndex={0}
-        >
-          <div className="kpi-top">
-            <span className="kpi-icon-badge">
-              <FileText size={18} />
-            </span>
-            <span className="kpi-trend">
-              {metrics.invoiceCount} invoices
-            </span>
-          </div>
-          <div className="kpi-body">
-            <span className="kpi-label">Total Invoiced (Revenue)</span>
-            <h2 className="kpi-value">{formatMoney(metrics.totalInvoiced, currency)}</h2>
-            <div className="kpi-foot">
-              <span>Collected: <b>{formatMoney(metrics.totalPaidInvoices, currency)}</b></span>
-              <ArrowUpRight size={14} className="kpi-arrow" />
+      {/* Ledger Activity & Customer Strength */}
+      {hasKpis && <section className="kpi-grid ledger-kpis">
+        {hasLedgerStats && ledgerPeriods.map(({ key, label, icon: Icon }) => {
+          const period: LedgerPeriod | undefined = ledgerStats?.[key];
+          return (
+            <div
+              key={key}
+              className="kpi-card ledger"
+              onClick={() => onNavigate('ledger')}
+              role="button"
+              tabIndex={0}
+            >
+              <div className="kpi-top">
+                <span className="kpi-icon-badge">
+                  <Icon size={18} />
+                </span>
+              </div>
+              <div className="kpi-body">
+                <span className="kpi-label">{label}</span>
+                <h2 className="kpi-value">
+                  {period ? period.transactions.toLocaleString() : '—'}
+                </h2>
+                <div className="kpi-foot">
+                  <span>
+                    Posted: <b>{period ? formatMoney(period.posted, currency) : '—'}</b>
+                  </span>
+                  <ArrowUpRight size={14} className="kpi-arrow" />
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          );
+        })}
 
-        {/* KPI 2: Outstanding Receivables */}
-        <div
-          className="kpi-card receivables"
-          onClick={() => onNavigate('invoices')}
-          role="button"
-          tabIndex={0}
-        >
-          <div className="kpi-top">
-            <span className="kpi-icon-badge">
-              <Clock size={18} />
-            </span>
-            <span className="kpi-trend">
-              {(metrics.totalInvoiced > 0
-                ? (metrics.totalReceivables / metrics.totalInvoiced) * 100
-                : 0
-              ).toFixed(0)}% unpaid
-            </span>
-          </div>
-          <div className="kpi-body">
-            <span className="kpi-label">Accounts Receivable (A/R)</span>
-            <h2 className="kpi-value">{formatMoney(metrics.totalReceivables, currency)}</h2>
-            <div className="kpi-foot">
-              <span>Awaiting client payment</span>
-              <ArrowUpRight size={14} className="kpi-arrow" />
-            </div>
-          </div>
-        </div>
-
-        {/* KPI 3: Total Expenses */}
-        <div
-          className="kpi-card expenses"
-          onClick={() => onNavigate('expenses')}
-          role="button"
-          tabIndex={0}
-        >
-          <div className="kpi-top">
-            <span className="kpi-icon-badge">
-              <Wallet size={18} />
-            </span>
-            <span className="kpi-trend">
-              {metrics.expenseCount} recorded
-            </span>
-          </div>
-          <div className="kpi-body">
-            <span className="kpi-label">Operating Expenses</span>
-            <h2 className="kpi-value">{formatMoney(metrics.totalExpenses, currency)}</h2>
-            <div className="kpi-foot">
-              <span>Operational business spend</span>
-              <ArrowUpRight size={14} className="kpi-arrow" />
-            </div>
-          </div>
-        </div>
-
-        {/* KPI 4: Net Margin / Operating Profit */}
-        <div
-          className="kpi-card net-profit"
-          onClick={() => onNavigate('reports')}
-          role="button"
-          tabIndex={0}
-        >
-          <div className="kpi-top">
-            <span className="kpi-icon-badge">
-              <Banknote size={18} />
-            </span>
-            <span className={`kpi-trend ${metrics.netMargin >= 0 ? 'positive' : 'negative'}`}>
-              {metrics.netMargin >= 0 ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
-              {metrics.marginPercent.toFixed(1)}% margin
-            </span>
-          </div>
-          <div className="kpi-body">
-            <span className="kpi-label">Net Operating Income</span>
-            <h2 className={`kpi-value ${metrics.netMargin >= 0 ? 'text-profit' : 'text-loss'}`}>
-              {formatMoney(metrics.netMargin, currency)}
-            </h2>
-            <div className="kpi-foot">
-              <span>Revenue minus expenses</span>
-              <ArrowUpRight size={14} className="kpi-arrow" />
-            </div>
-          </div>
-        </div>
-
-        {/* KPI 5: Liquid Cash & Banking */}
-        <div
-          className="kpi-card banking"
-          onClick={() => onNavigate('banking')}
-          role="button"
-          tabIndex={0}
-        >
-          <div className="kpi-top">
-            <span className="kpi-icon-badge">
-              <Landmark size={18} />
-            </span>
-            <span className="kpi-trend">
-              {metrics.bankAccountCount} bank account{metrics.bankAccountCount === 1 ? '' : 's'}
-            </span>
-          </div>
-          <div className="kpi-body">
-            <span className="kpi-label">Cash & Bank Balances</span>
-            <h2 className="kpi-value">{formatMoney(metrics.totalCash, currency)}</h2>
-            <div className="kpi-foot">
-              <span>Liquid assets on hand</span>
-              <ArrowUpRight size={14} className="kpi-arrow" />
-            </div>
-          </div>
-        </div>
-
-        {/* KPI 6: Customer Directory & Ledger */}
-        <div
+        {showCustomerStrength && <div
           className="kpi-card directory"
           onClick={() => onNavigate('customers')}
           role="button"
@@ -399,24 +331,34 @@ export function Dashboard({
               <Users size={18} />
             </span>
             <span className="kpi-trend">
-              {metrics.accountCount} COA accounts
+              {metrics.customerCount} total
             </span>
           </div>
           <div className="kpi-body">
             <span className="kpi-label">Active Customers</span>
-            <h2 className="kpi-value">{metrics.customerCount}</h2>
+            <h2 className="kpi-value">{metrics.activeCustomerCount}</h2>
             <div className="kpi-foot">
-              <span>Client directory records</span>
+              <span>Customer strength</span>
               <ArrowUpRight size={14} className="kpi-arrow" />
             </div>
           </div>
-        </div>
-      </section>
+        </div>}
+      </section>}
+
+      {!hasLedgerStats && (
+        <p className="admin-notice">
+          Ledger statistics are unavailable because the Ledger menu is disabled for this company.
+        </p>
+      )}
+
+      {!hasKpis && !hasShortcuts && !hasFiscalStatus && (
+        <p className="admin-notice">No activity or shortcuts are available for your enabled menus.</p>
+      )}
 
       {/* Main Interactive Grid: Financial Trend & Invoice Status Breakdown */}
       <div className="dashboard-analytics-row">
         {/* Cash Flow / Revenue vs Expenses Comparison */}
-        <div className="analytics-card cash-flow-card">
+        {allowedPages.has('invoices') && allowedPages.has('expenses') && <div className="analytics-card cash-flow-card">
           <div className="card-header">
             <div>
               <span className="card-subtitle">FINANCIAL PERFORMANCE</span>
@@ -524,16 +466,16 @@ export function Dashboard({
                   %
                 </b>
               </div>
-              <div className="cf-metric">
+              {allowedPages.has('banking') && <div className="cf-metric">
                 <small>Cash Reserves</small>
                 <b>{formatMoney(metrics.totalCash, currency)}</b>
-              </div>
+              </div>}
             </div>
           </div>
-        </div>
+        </div>}
 
         {/* Invoice Pipeline & Status Distribution */}
-        <div className="analytics-card status-card">
+        {allowedPages.has('invoices') && <div className="analytics-card status-card">
           <div className="card-header">
             <div>
               <span className="card-subtitle">RECEIVABLES AGING</span>
@@ -621,48 +563,48 @@ export function Dashboard({
               <span className="status draft">DRAFT</span>
             </div>
           </div>
-        </div>
+        </div>}
       </div>
 
       {/* Secondary Row: Quick Actions, Recent Activity Tabs & Financial Status */}
       <div className="dashboard-grid-two">
         {/* Activity Center (Tabs for Invoices, Expenses, Banking) */}
-        <div className="table-panel activity-center">
+        {activityTab && <div className="table-panel activity-center">
           <div className="activity-tabs-header">
             <div className="tabs-list">
-              <button
-                className={`tab-btn ${activeTab === 'invoices' ? 'active' : ''}`}
+              {allowedPages.has('invoices') && <button
+                className={`tab-btn ${activityTab === 'invoices' ? 'active' : ''}`}
                 onClick={() => setActiveTab('invoices')}
               >
                 <FileText size={15} />
                 <span>Recent Invoices ({invoices.length})</span>
-              </button>
-              <button
-                className={`tab-btn ${activeTab === 'expenses' ? 'active' : ''}`}
+              </button>}
+              {allowedPages.has('expenses') && <button
+                className={`tab-btn ${activityTab === 'expenses' ? 'active' : ''}`}
                 onClick={() => setActiveTab('expenses')}
               >
                 <Wallet size={15} />
                 <span>Expenses ({expenses.length})</span>
-              </button>
-              <button
-                className={`tab-btn ${activeTab === 'banking' ? 'active' : ''}`}
+              </button>}
+              {allowedPages.has('banking') && <button
+                className={`tab-btn ${activityTab === 'banking' ? 'active' : ''}`}
                 onClick={() => setActiveTab('banking')}
               >
                 <Landmark size={15} />
                 <span>Bank Accounts ({bankAccounts.length})</span>
-              </button>
+              </button>}
             </div>
 
             <button
               className="text-btn view-more-btn"
-              onClick={() => onNavigate(activeTab === 'invoices' ? 'invoices' : activeTab === 'expenses' ? 'expenses' : 'banking')}
+              onClick={() => onNavigate(activityTab === 'invoices' ? 'invoices' : activityTab === 'expenses' ? 'expenses' : 'banking')}
             >
               Full list <ArrowUpRight size={13} />
             </button>
           </div>
 
           <div className="table-scroll activity-table">
-            {activeTab === 'invoices' && (
+            {activityTab === 'invoices' && (
               <table>
                 <thead>
                   <tr>
@@ -707,7 +649,7 @@ export function Dashboard({
               </table>
             )}
 
-            {activeTab === 'expenses' && (
+            {activityTab === 'expenses' && (
               <table>
                 <thead>
                   <tr>
@@ -746,7 +688,7 @@ export function Dashboard({
               </table>
             )}
 
-            {activeTab === 'banking' && (
+            {activityTab === 'banking' && (
               <table>
                 <thead>
                   <tr>
@@ -785,102 +727,63 @@ export function Dashboard({
               </table>
             )}
           </div>
-        </div>
+        </div>}
 
         {/* Right Column: Quick Workflows & Fiscal Year Status */}
         <div className="right-dashboard-col">
           {/* Fiscal Status Card */}
-          <div className="fiscal-health-card">
+          {hasFiscalStatus && <div className="fiscal-health-card">
             <div className="fh-header">
               <span className="card-subtitle">POSTING STATUS</span>
               <h4>Fiscal Period & Ledger</h4>
             </div>
             <div className="fh-content">
-              <div className="fh-row">
+              {allowedPages.has('fiscal-years') && <div className="fh-row">
                 <span className="fh-label">Fiscal Year:</span>
                 <span className="fh-value">
                   <b>{activeFiscalYear ? String(activeFiscalYear.yearName) : 'FY 2026'}</b>
                   <span className="pill">Active</span>
                 </span>
-              </div>
-              <div className="fh-row">
+              </div>}
+              {allowedPages.has('accounting-periods') && <div className="fh-row">
                 <span className="fh-label">Open Period:</span>
                 <span className="fh-value">
                   <b>{activePeriod ? String(activePeriod.periodName) : 'October 2026'}</b>
                   <span className="pill">Posting Open</span>
                 </span>
-              </div>
-              <div className="fh-row">
+              </div>}
+              {allowedPages.has('ledger') && <div className="fh-row">
                 <span className="fh-label">Ledger State:</span>
                 <span className="fh-value">
                   <CheckCircle2 size={14} className="text-forest" /> Balanced Debits/Credits
                 </span>
-              </div>
+              </div>}
             </div>
-          </div>
+          </div>}
 
           {/* Quick Actions Shortcuts */}
-          <div className="quick-shortcuts-panel">
+          {hasShortcuts && <div className="quick-shortcuts-panel">
             <div className="qs-header">
               <span className="card-subtitle">WORKFLOW SHORTCUTS</span>
               <h4>Quick Actions</h4>
             </div>
             <div className="shortcuts-grid">
-              <button
-                className="shortcut-tile"
-                onClick={() => onNavigate('invoices')}
-              >
-                <span className="shortcut-icon"><FileText size={16} /></span>
-                <span>Invoices</span>
-                <ArrowUpRight size={13} className="tile-arrow" />
-              </button>
-
-              <button
-                className="shortcut-tile"
-                onClick={() => onNavigate('expenses')}
-              >
-                <span className="shortcut-icon"><Wallet size={16} /></span>
-                <span>Expenses</span>
-                <ArrowUpRight size={13} className="tile-arrow" />
-              </button>
-
-              <button
-                className="shortcut-tile"
-                onClick={() => onNavigate('customers')}
-              >
-                <span className="shortcut-icon"><Users size={16} /></span>
-                <span>Customers</span>
-                <ArrowUpRight size={13} className="tile-arrow" />
-              </button>
-
-              <button
-                className="shortcut-tile"
-                onClick={() => onNavigate('journals')}
-              >
-                <span className="shortcut-icon"><BookOpen size={16} /></span>
-                <span>Journals</span>
-                <ArrowUpRight size={13} className="tile-arrow" />
-              </button>
-
-              <button
-                className="shortcut-tile"
-                onClick={() => onNavigate('banking')}
-              >
-                <span className="shortcut-icon"><Landmark size={16} /></span>
-                <span>Banking</span>
-                <ArrowUpRight size={13} className="tile-arrow" />
-              </button>
-
-              <button
-                className="shortcut-tile"
-                onClick={() => onNavigate('reports')}
-              >
-                <span className="shortcut-icon"><Banknote size={16} /></span>
-                <span>Reports</span>
-                <ArrowUpRight size={13} className="tile-arrow" />
-              </button>
+              {([
+                ['invoices', 'Invoices', FileText],
+                ['expenses', 'Expenses', Wallet],
+                ['customers', 'Customers', Users],
+                ['journals', 'Journals', BookOpen],
+                ['banking', 'Banking', Landmark],
+                ['reports', 'Reports', Banknote],
+              ] as const).filter(([key]) => allowedPages.has(key)).map(([key, label, Icon]) => (
+                <button key={key} className="shortcut-tile" onClick={() => onNavigate(key)}>
+                  <span className="shortcut-icon"><Icon size={16} /></span>
+                  <span>{label}</span>
+                  <ArrowUpRight size={13} className="tile-arrow" />
+                </button>
+              ))}
             </div>
-          </div>
+          </div>}
         </div>
       </div>
     </div>

@@ -281,6 +281,7 @@ const corePages: Record<Exclude<PageKey, AccountPageKey>, Page> = {
     icon: CreditCard,
     createNote: 'The payment number is generated automatically when the payment is saved.',
     columns: ['paymentNumber', 'paymentDate', 'customerId', 'invoiceId', 'amount', 'paymentMethod', 'referenceNumber'],
+    columnMenuCodes: { invoiceId: 'INVOICES' },
     fields: [
       {
         name: 'customerId',
@@ -299,6 +300,7 @@ const corePages: Record<Exclude<PageKey, AccountPageKey>, Page> = {
         name: 'invoiceId',
         label: 'Invoice',
         type: 'select',
+        menuCode: 'INVOICES',
         select: {
           endpoint: 'invoices',
           valueField: 'invoiceId',
@@ -384,7 +386,7 @@ const corePages: Record<Exclude<PageKey, AccountPageKey>, Page> = {
   },
   reports: {
     title: 'Reports',
-    description: 'Trial balance, profit and loss, account balances, chart of accounts, and main accounts.',
+    description: 'Detail and summary trial balances, profit and loss, account balances, chart of accounts, and main accounts.',
     endpoint: 'reports/trial-balance',
     menuCode: 'REPORTS',
     icon: FileChartColumnIncreasing,

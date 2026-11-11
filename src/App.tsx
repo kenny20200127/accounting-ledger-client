@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 
 import './App.css';
@@ -45,11 +45,8 @@ function App() {
       : null;
   });
 
-  // Database-fetched menus
-  const [dbMenus, setDbMenus] = useState<MenuItem[]>(() => {
-    const cached = localStorage.getItem(menusKey);
-    return cached ? JSON.parse(cached) : [];
-  });
+  const [dbMenus, setDbMenus] = useState<MenuItem[]>([]);
+  const [checkingMenus, setCheckingMenus] = useState(!!session?.accessToken);
 
   // Slide menu states: mobile drawer vs desktop collapse
   const [slideMenuOpen, setSlideMenuOpen] = useState(false);
@@ -79,41 +76,51 @@ function App() {
     applyBrowserBranding(browserBrand);
   }, [browserBrand]);
 
-  // Fetch menus directly from the database!
-  const fetchMenusFromDb = useCallback(async (token?: string) => {
-    try {
-      let data: MenuItem[] = [];
-      if (token) {
-        try {
-          data = await api<MenuItem[]>('auth/menus', token);
-        } catch {
-          data = [];
-          setDbMenus([]);
-        }
-      } else {
-        data = await api<MenuItem[]>('auth/menus/public');
-      }
-
-      if (Array.isArray(data)) {
-        setDbMenus(data);
-        if (token)
-          setActive((current) =>
-            data.some((menu) => menuCodeToPageKey[menu.menuCode] === current)
-              ? current
-              : (menuCodeToPageKey[data[0]?.menuCode] ?? 'dashboard'),
-          );
-        localStorage.setItem(menusKey, JSON.stringify(data));
-        setSession((prev) => (prev ? { ...prev, menus: data } : null));
-      }
-    } catch (err) {
-      console.warn('Unable to load menus from DB:', err);
-    }
-  }, []);
-
-  // Initial menu fetch from DB on load or session change
   useEffect(() => {
-    fetchMenusFromDb(session?.accessToken);
-  }, [fetchMenusFromDb, session?.accessToken]);
+    const token = session?.accessToken;
+    if (!token) return;
+    let live = true;
+    let latest = 0;
+    setCheckingMenus(true);
+    setDbMenus([]);
+    const refreshMenus = async () => {
+      const request = ++latest;
+      try {
+        const rows = await api<MenuItem[]>('auth/menus', token);
+        if (!live || request !== latest) return;
+        const data = rows.filter((menu) =>
+          menu.canView !== false && menu.isActive !== false && menuCodeToPageKey[menu.menuCode],
+        );
+        setDbMenus(data);
+        setActive((current) =>
+          data.some((menu) => menuCodeToPageKey[menu.menuCode] === current)
+            ? current
+            : (menuCodeToPageKey[data[0]?.menuCode] ?? 'dashboard'),
+        );
+        localStorage.setItem(menusKey, JSON.stringify(data));
+        setSession((prev) => prev?.accessToken === token ? { ...prev, menus: data } : prev);
+      } catch {
+        if (!live || request !== latest) return;
+        setDbMenus([]);
+        localStorage.removeItem(menusKey);
+      } finally {
+        if (live && request === latest) setCheckingMenus(false);
+      }
+    };
+    const refreshVisibleMenus = () => {
+      if (document.visibilityState === 'visible') void refreshMenus();
+    };
+    void refreshMenus();
+    window.addEventListener('focus', refreshVisibleMenus);
+    document.addEventListener('visibilitychange', refreshVisibleMenus);
+    const interval = window.setInterval(refreshVisibleMenus, 30000);
+    return () => {
+      live = false;
+      window.clearInterval(interval);
+      window.removeEventListener('focus', refreshVisibleMenus);
+      document.removeEventListener('visibilitychange', refreshVisibleMenus);
+    };
+  }, [session?.accessToken]);
 
   const [companyRefresh, setCompanyRefresh] = useState(0);
   useEffect(() => {
@@ -282,7 +289,7 @@ function App() {
 
       <main className="main">
         <AppHeader
-          pageTitle={page.title}
+          pageTitle={dbMenus.some((menu) => menuCodeToPageKey[menu.menuCode] === active) ? page.title : 'Workspace'}
           companies={companies}
           companyId={companyId}
           canSwitchCompany={!!session.user.isPlatformAdmin}
@@ -292,7 +299,7 @@ function App() {
         />
 
         <div className="content">
-          <AppContent
+          {checkingMenus ? <p role="status">Loading company menus...</p> : <AppContent
             active={active}
             token={session.accessToken}
             companyId={companyId}
@@ -323,7 +330,7 @@ function App() {
             }}
             onCompanyChanged={() => setCompanyRefresh((n) => n + 1)}
             onSelectCompany={setCompanyId}
-          />
+          />}
         </div>
       </main>
     </div>

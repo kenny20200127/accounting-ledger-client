@@ -6,10 +6,12 @@ import {
   LogOut,
   Users,
   ListChecks,
+  PanelsTopLeft,
   ClipboardList,
 } from 'lucide-react';
 import {
   CompanyAdministration,
+  CompanyMenuAdministration,
   UserAdministration,
   RoleAdministration,
   AdministrationAudit,
@@ -21,9 +23,10 @@ import { platformTokenKey } from './config/storage';
 import './App.css';
 import './PlatformApp.css';
 const tokenKey = platformTokenKey;
-type Tab = 'companies' | 'users' | 'roles' | 'audit';
+type Tab = 'companies' | 'menus' | 'users' | 'roles' | 'audit';
 const tabs = [
   { id: 'companies' as const, label: 'Companies', icon: Building2 },
+  { id: 'menus' as const, label: 'Company Menus', icon: PanelsTopLeft },
   { id: 'users' as const, label: 'Company Users', icon: Users },
   { id: 'roles' as const, label: 'Company Permissions', icon: ListChecks },
   { id: 'audit' as const, label: 'Administration Audit', icon: ClipboardList },
@@ -387,6 +390,12 @@ export default function PlatformApp() {
             <div className="platform-empty">
               Select a company to manage its administration.
             </div>
+          ) : tab === 'menus' ? (
+            <CompanyMenuAdministration
+              key={companyId}
+              token={token}
+              companyId={companyId}
+            />
           ) : tab === 'users' ? (
             <UserAdministration
               key={companyId}

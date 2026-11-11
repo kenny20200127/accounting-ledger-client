@@ -119,9 +119,14 @@ export function RoleAdministration({
               {
                 companyId,
                 roleName: name,
-                permissions: permissions.map(
-                  ({ menuName, menuCode, ...permission }) => permission,
-                ),
+                permissions: permissions.map((permission) => ({
+                  menuId: permission.menuId,
+                  canView: permission.canView,
+                  canCreate: permission.canCreate,
+                  canEdit: permission.canEdit,
+                  canDelete: permission.canDelete,
+                  canApprove: permission.canApprove,
+                })),
               },
               selected ? 'PATCH' : 'POST',
             );
@@ -163,7 +168,7 @@ export function RoleAdministration({
           </label>
         </div>
         {immutable && (
-          <p>The built-in company administrator retains full company access.</p>
+          <p>The built-in company administrator retains full access to enabled company menus.</p>
         )}
         <div className="table-wrap">
           <table>
@@ -178,13 +183,16 @@ export function RoleAdministration({
             <tbody>
               {permissions.map((permission) => (
                 <tr key={permission.menuId}>
-                  <td>{permission.menuName}</td>
+                  <td>
+                    {permission.menuName}
+                    {!permission.companyEnabled && <small> — Disabled by platform</small>}
+                  </td>
                   {actions.map((action) => (
                     <td key={action}>
                       <input
                         aria-label={permission.menuName + ' ' + action.slice(3)}
                         type="checkbox"
-                        disabled={busy || immutable}
+                        disabled={busy || immutable || !permission.companyEnabled}
                         checked={permission[action]}
                         onChange={(event) =>
                           setPermissions((rows) =>
