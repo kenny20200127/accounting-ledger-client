@@ -123,7 +123,16 @@ export function AppContent({
   };
 
   if (active === 'ledger')
-    return <LedgerCaptureView key={companyId} token={token} companyId={companyId} />;
+    return (
+      <LedgerCaptureView
+        key={companyId}
+        token={token}
+        companyId={companyId}
+        canApprove={menus.some(
+          (menu) => menu.menuCode === 'LEDGER' && menu.canApprove === true,
+        )}
+      />
+    );
 
   if (active === 'accounts')
     return (

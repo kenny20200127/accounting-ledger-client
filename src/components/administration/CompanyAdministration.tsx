@@ -112,7 +112,12 @@ export function CompanyAdministration({
       token,
     )
       .then((rows) => {
-        if (live) setAccountOptions(Array.isArray(rows) ? rows : []);
+        if (live)
+          setAccountOptions(
+            (Array.isArray(rows) ? rows : []).filter((account) =>
+              account.accountCode.startsWith('3'),
+            ),
+          );
       })
       .catch(() => {
         if (live) setAccountOptions([]);

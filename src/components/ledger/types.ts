@@ -30,19 +30,24 @@ export type PostResult = {
   }[];
 };
 
+export type HistoryRow = {
+  historyId: number;
+  docNo: string;
+  docType: string;
+  refNo: string | null;
+  docDate: string;
+  accountCode: string;
+  accountName: string;
+  debitAmount: string;
+  creditAmount: string;
+  remarks: string | null;
+  reversedByDocNo: string | null;
+  reversalOfDocNo: string | null;
+  reversible: boolean;
+};
+
 export type HistoryPage = {
-  items: {
-    historyId: number;
-    docNo: string;
-    docType: string;
-    refNo: string | null;
-    docDate: string;
-    accountCode: string;
-    accountName: string;
-    debitAmount: string;
-    creditAmount: string;
-    remarks: string | null;
-  }[];
+  items: HistoryRow[];
   total: number;
   page: number;
   limit: number;

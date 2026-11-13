@@ -4,6 +4,7 @@ import {
   CheckCircle2,
   Plus,
   RefreshCw,
+  RotateCcw,
   Search,
   Trash2,
   X,
@@ -21,9 +22,15 @@ import {
   toCents,
   today,
 } from './format';
-import type { CaptureLine, HistoryPage, PostResult } from './types';
+import type { CaptureLine, HistoryPage, HistoryRow, PostResult } from './types';
 
-export function LedgerCaptureView({ token, companyId }: ViewProps) {
+type LedgerCaptureProps = ViewProps & { canApprove?: boolean };
+
+export function LedgerCaptureView({
+  token,
+  companyId,
+  canApprove = false,
+}: LedgerCaptureProps) {
   const [docType, setDocType] = useState('JV');
   const [refNo, setRefNo] = useState('');
   const [docDate, setDocDate] = useState(today);
@@ -42,6 +49,9 @@ export function LedgerCaptureView({ token, companyId }: ViewProps) {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [page, setPage] = useState(1);
   const [historyRefresh, setHistoryRefresh] = useState(0);
+  const [reversalTarget, setReversalTarget] = useState<HistoryRow | null>(null);
+  const [reversing, setReversing] = useState(false);
+  const [notice, setNotice] = useState('');
 
   const debitCents = lines.reduce(
     (sum, line) => sum + (line.transactionType === 'DB' ? toCents(line.amount) : 0),
@@ -157,6 +167,7 @@ export function LedgerCaptureView({ token, companyId }: ViewProps) {
         `Total debits must equal total credits. Out of balance by ${formatCents(Math.abs(difference))}.`,
       );
     setPosting(true);
+    setNotice('');
     try {
       const payload = {
         companyId,
@@ -190,13 +201,41 @@ export function LedgerCaptureView({ token, companyId }: ViewProps) {
     }
   }
 
+  async function reverse() {
+    if (!reversalTarget) return;
+    setReversing(true);
+    setError('');
+    setNotice('');
+    try {
+      const data = await read<{ docNo: string; reversalDocNo: string }>(
+        `${API_PREFIX}/ledger-batches/${reversalTarget.historyId}/reverse`,
+        token,
+        { method: 'POST' },
+      );
+      setNotice(
+        `Reversed ${data.docNo}. Reversal ${data.reversalDocNo} was posted with the opposite lines.`,
+      );
+      setReversalTarget(null);
+      setHistoryRefresh((value) => value + 1);
+    } catch (reason) {
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : 'Failed to reverse the ledger document.',
+      );
+      setReversalTarget(null);
+    } finally {
+      setReversing(false);
+    }
+  }
+
   return (
     <div className="extra-page-view">
       <div className="page-heading">
         <div>
           <small className="eyebrow">LEDGER CAPTURE</small>
           <h1>Ledger capture</h1>
-          <p>Post debit and credit lines to ledger accounts and review recent postings.</p>
+          <p>Post debit and credit lines to ledger accounts, review recent postings, and reverse a posting made in error.</p>
         </div>
         <div className="heading-actions">
           <button
@@ -212,6 +251,12 @@ export function LedgerCaptureView({ token, companyId }: ViewProps) {
       {error && (
         <div className="error-banner" role="alert">
           {error}
+        </div>
+      )}
+
+      {notice && (
+        <div className="success-banner" role="status">
+          {notice}
         </div>
       )}
 
@@ -496,17 +541,21 @@ export function LedgerCaptureView({ token, companyId }: ViewProps) {
                 <th>Debit</th>
                 <th>Credit</th>
                 <th>Remarks</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {historyLoading ? (
                 <tr>
-                  <td colSpan={7} className="empty">
+                  <td colSpan={8} className="empty">
                     Loading postings…
                   </td>
                 </tr>
               ) : history && history.items.length > 0 ? (
-                history.items.map((row) => (
+                history.items.map((row, index) => {
+                  const firstOfDocument =
+                    index === 0 || history.items[index - 1].docNo !== row.docNo;
+                  return (
                   <tr key={row.historyId}>
                     <td>
                       {typeof row.docDate === 'string'
@@ -522,6 +571,17 @@ export function LedgerCaptureView({ token, companyId }: ViewProps) {
                           ref {row.refNo}
                         </small>
                       ) : null}
+                      {row.reversedByDocNo ? (
+                        <div style={{ marginTop: 4 }}>
+                          <span className="status partial">Reversed</span>
+                        </div>
+                      ) : row.reversalOfDocNo ? (
+                        <div style={{ marginTop: 4 }}>
+                          <span className="status draft">
+                            Reversal of {row.reversalOfDocNo}
+                          </span>
+                        </div>
+                      ) : null}
                     </td>
                     <td>
                       <span className="status draft">{row.docType}</span>
@@ -532,11 +592,29 @@ export function LedgerCaptureView({ token, companyId }: ViewProps) {
                     <td>{toCents(row.debitAmount) ? money(row.debitAmount) : '—'}</td>
                     <td>{toCents(row.creditAmount) ? money(row.creditAmount) : '—'}</td>
                     <td>{row.remarks || '—'}</td>
+                    <td>
+                      {firstOfDocument &&
+                      canApprove &&
+                      row.reversible &&
+                      !row.reversedByDocNo &&
+                      !row.reversalOfDocNo ? (
+                        <button
+                          className="btn btn-light"
+                          type="button"
+                          onClick={() => setReversalTarget(row)}
+                        >
+                          <RotateCcw size={13} /> Reverse
+                        </button>
+                      ) : (
+                        <span aria-hidden>—</span>
+                      )}
+                    </td>
                   </tr>
-                ))
+                  );
+                })
               ) : (
                 <tr>
-                  <td colSpan={7} className="empty">
+                  <td colSpan={8} className="empty">
                     No postings found for this company yet.
                   </td>
                 </tr>
@@ -571,6 +649,63 @@ export function LedgerCaptureView({ token, companyId }: ViewProps) {
           </div>
         )}
       </section>
+
+      {reversalTarget && (
+        <div
+          className="modal-bg"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !reversing)
+              setReversalTarget(null);
+          }}
+        >
+          <section
+            className="modal"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="reverse-ledger-title"
+          >
+            <div className="modal-head">
+              <div>
+                <small className="eyebrow">REVERSE LEDGER</small>
+                <h2 id="reverse-ledger-title">
+                  Reverse {reversalTarget.docNo}?
+                </h2>
+                <p className="modal-note">
+                  A reversing document is posted with debits and credits swapped,
+                  dated today (or the original date when it is later), so the
+                  document no longer affects balances. The original stays in the
+                  posting history marked as reversed.
+                </p>
+              </div>
+              <button
+                className="row-open"
+                onClick={() => setReversalTarget(null)}
+                aria-label="Close"
+                disabled={reversing}
+              >
+                <X size={17} />
+              </button>
+            </div>
+            <div className="modal-actions">
+              <button
+                className="btn btn-light"
+                onClick={() => setReversalTarget(null)}
+                disabled={reversing}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-danger"
+                onClick={reverse}
+                disabled={reversing}
+              >
+                <RotateCcw size={15} />{' '}
+                {reversing ? 'Reversing…' : 'Reverse document'}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
