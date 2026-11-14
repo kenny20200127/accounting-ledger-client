@@ -11,6 +11,7 @@ import { Dashboard } from '../dashboard/Dashboard';
 import { RecordModule } from '../records/RecordModule';
 import { FinancialReportsView } from '../reports/FinancialReportsView';
 import { LedgerCaptureView } from '../ledger/LedgerCaptureView';
+import { PeriodClosingView } from '../periods/PeriodClosingView';
 import { BankReconciliationView } from '../banking/BankReconciliationView';
 import {
   AdministrationAudit,
@@ -138,6 +139,21 @@ export function AppContent({
     return (
       <ChartOfAccountsModule {...recordProps} onOpenReport={onOpenReport} />
     );
+
+  if (active === 'accounting-periods') {
+    const periodMenu = menus.find((menu) => menu.menuCode === 'ACCOUNTING_PERIODS');
+    const fiscalMenu = menus.find((menu) => menu.menuCode === 'FISCAL_YEARS');
+    return (
+      <PeriodClosingView
+        key={companyId}
+        token={token}
+        companyId={companyId}
+        canApprovePeriods={periodMenu?.canApprove === true}
+        canCreatePeriods={periodMenu?.canCreate === true}
+        canApproveYears={fiscalMenu?.canApprove === true}
+      />
+    );
+  }
 
   if (isAccountSetupPageKey(active))
     return (
